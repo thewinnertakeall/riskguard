@@ -1,0 +1,740 @@
+import { useState } from "react";
+
+import StatCard from "../components/common/StatCard";
+import RiskBadge from "../components/common/RiskBadge";
+
+export default function ISO27001View({
+  risks,
+  selectedRisk,
+  setSelectedRisk,
+  isoStatus,
+  isoControls,
+  isoCompliance,
+  isoSoA,
+  isoLoading,
+  isoSaving,
+  saveISOControl,
+  riskISOControls,
+  riskISOLoading,
+  riskISOSaving,
+  handleCreateRiskISOControl,
+  handleDeleteRiskISOControl,
+  handleUpdateRiskISOControl
+}) {
+  const [selectedISOCode, setSelectedISOCode] = useState("");
+  const [treatmentStatus, setTreatmentStatus] = useState("Planned");
+  const [notes, setNotes] = useState("");
+  const [editingISOCode, setEditingISOCode] = useState(null);
+
+  const linkedCodes = new Set(
+    riskISOControls.map((control) => control.code)
+  );
+
+  const availableControls = isoControls.filter(
+    (control) => !linkedCodes.has(control.code)
+  );
+
+  const formControls = editingISOCode
+    ? isoControls.filter(
+        (control) => control.code === editingISOCode
+      )
+    : availableControls;
+
+  async function handleLink() {
+    if (!selectedRisk?.code || !selectedISOCode) {
+      return;
+    }
+
+    await handleCreateRiskISOControl({
+      iso_control_code: selectedISOCode,
+      treatment_status: treatmentStatus,
+      notes: notes.trim() || null
+    });
+
+    setSelectedISOCode("");
+    setTreatmentStatus("Planned");
+    setNotes("");
+  }
+
+  function handleStartEdit(control) {
+    setEditingISOCode(control.code);
+    setSelectedISOCode(control.code);
+    setTreatmentStatus(control.treatment_status || "Planned");
+    setNotes(control.notes || "");
+  }
+
+  function handleCancelEdit() {
+    setEditingISOCode(null);
+    setSelectedISOCode("");
+    setTreatmentStatus("Planned");
+    setNotes("");
+  }
+
+  async function handleSaveEdit() {
+    if (!editingISOCode || !selectedRisk?.code) {
+      return;
+    }
+
+    await handleUpdateRiskISOControl(
+      editingISOCode,
+      {
+        treatment_status: treatmentStatus,
+        notes: notes.trim() || null
+      }
+    );
+
+    handleCancelEdit();
+  }
+
+  return (
+    <section className="content-section">
+
+      <div className="stats-grid">
+
+        <StatCard
+          title="ISO Controls"
+          value={isoCompliance?.total_controls ?? isoControls.length}
+          icon="✓"
+          description="Controles gestionados"
+        />
+
+        <StatCard
+          title="Implemented"
+          value={isoCompliance?.implemented ?? 0}
+          icon="●"
+          description="Controles implementados"
+          variant="success"
+        />
+
+        <StatCard
+          title="Partial"
+          value={isoCompliance?.partial ?? 0}
+          icon="◐"
+          description="Implementación parcial"
+          variant="warning"
+        />
+
+        <StatCard
+          title="Compliance"
+          value={`${isoCompliance?.compliance_percentage ?? 0}%`}
+          icon="%"
+          description="Cumplimiento estimado"
+        />
+
+      </div>
+
+      <div className="content-grid">
+
+        <div className="panel">
+
+          <div className="panel-header">
+
+            <div>
+              <h2>ISO/IEC 27001:2022</h2>
+              <p>
+                Gestión de controles de seguridad de la información
+              </p>
+            </div>
+
+            <span className="connection-status online">
+              <span className="status-circle"></span>
+              {isoStatus?.standard || "ISO 27001"}
+            </span>
+
+          </div>
+
+          {isoLoading ? (
+            <div className="empty-state">
+              Cargando controles ISO...
+            </div>
+          ) : (
+            <div className="table-container">
+
+              <table className="data-table">
+
+                <thead>
+                  <tr>
+                    <th>Control</th>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Estado</th>
+                    <th>Efectividad</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  {isoControls.map((control) => (
+
+                    <tr key={control.code}>
+
+                      <td>
+                        <strong>{control.code}</strong>
+                      </td>
+
+                      <td>
+                        <div className="risk-name">
+                          {control.name}
+                        </div>
+
+                        {control.description && (
+                          <div className="risk-description">
+                            {control.description}
+                          </div>
+                        )}
+                      </td>
+
+                      <td>
+                        {control.category || "—"}
+                      </td>
+
+                      <td>
+                        <span className="status-dot">
+                          {control.implementation_status ||
+                            "Not Implemented"}
+                        </span>
+                      </td>
+
+                      <td>
+                        {Number(control.effectiveness || 0)}%
+                      </td>
+
+                      <td>
+
+                        <select
+                          value={
+                            control.implementation_status ||
+                            "Not Implemented"
+                          }
+                          disabled={isoSaving === control.code}
+                          onChange={(event) =>
+                            saveISOControl(
+                              control.code,
+                              {
+                                implementation_status:
+                                  event.target.value,
+                                effectiveness:
+                                  control.effectiveness || 0
+                              }
+                            )
+                          }
+                        >
+                          <option value="Not Implemented">
+                            Not Implemented
+                          </option>
+                          <option value="Partial">
+                            Partial
+                          </option>
+                          <option value="Implemented">
+                            Implemented
+                          </option>
+                        </select>
+
+                      </td>
+
+                    </tr>
+
+                  ))}
+
+                </tbody>
+
+              </table>
+
+            </div>
+          )}
+
+        </div>
+
+        <div className="panel">
+
+          <div className="panel-header">
+
+            <div>
+              <h2>Risk ↔ ISO Controls</h2>
+              <p>
+                Relación entre riesgos y controles ISO 27001
+              </p>
+            </div>
+
+          </div>
+
+          <div className="form-group">
+
+            <label>Risk</label>
+
+            <select
+              value={selectedRisk?.code || ""}
+              onChange={(event) => {
+                const risk = risks.find(
+                  (item) => item.code === event.target.value
+                );
+
+                setSelectedRisk(risk || null);
+              }}
+            >
+              <option value="">
+                Seleccionar riesgo
+              </option>
+
+              {risks.map((risk) => (
+                <option
+                  key={risk.code}
+                  value={risk.code}
+                >
+                  {risk.code} — {risk.name}
+                </option>
+              ))}
+            </select>
+
+          </div>
+
+          {selectedRisk && (
+            <div className="selected-risk">
+
+              <div>
+                <strong>{selectedRisk.code}</strong>
+                <div className="risk-description">
+                  {selectedRisk.name}
+                </div>
+              </div>
+
+              <RiskBadge
+                level={selectedRisk.risk_level}
+              />
+
+            </div>
+          )}
+
+          <div className="linked-controls">
+
+            <h3>Linked controls</h3>
+
+            {riskISOLoading ? (
+              <div className="empty-state">
+                Loading relationships...
+              </div>
+            ) : riskISOControls.length === 0 ? (
+              <div className="empty-state">
+                No ISO controls linked to this risk.
+              </div>
+            ) : (
+              riskISOControls.map((control) => (
+
+                <div
+                  className="linked-control"
+                  key={control.code}
+                >
+
+                  <div>
+
+                    <strong>{control.code}</strong>
+
+                    <div className="risk-description">
+                      {control.name}
+                    </div>
+
+                    <small>
+                      Treatment:{" "}
+                      {control.treatment_status || "Planned"}
+                    </small>
+
+                    {control.notes && (
+                      <div className="risk-description">
+                        {control.notes}
+                      </div>
+                    )}
+
+                  </div>
+
+                  <button
+                    className="secondary-button"
+                    disabled={riskISOSaving}
+                    onClick={() =>
+                      handleDeleteRiskISOControl(
+                        control.code
+                      )
+                    }
+                  >
+                    Remove
+                  </button>
+
+                </div>
+
+              ))
+            )}
+
+          </div>
+
+          <div className="link-control-form">
+
+            <h3>Associate ISO control</h3>
+
+            <div className="form-group">
+
+              <label>ISO Control</label>
+
+              <select
+                value={selectedISOCode}
+                onChange={(event) =>
+                  setSelectedISOCode(event.target.value)
+                }
+                disabled={
+                  riskISOSaving ||
+                  !selectedRisk ||
+                  availableControls.length === 0
+                }
+              >
+                <option value="">
+                  Seleccionar control
+                </option>
+
+                {formControls.map((control) => (
+                  <option
+                    key={control.code}
+                    value={control.code}
+                  >
+                    {control.code} — {control.name}
+                  </option>
+                ))}
+
+              </select>
+
+            </div>
+
+            <div className="form-group">
+
+              <label>Treatment status</label>
+
+              <select
+                value={treatmentStatus}
+                onChange={(event) =>
+                  setTreatmentStatus(event.target.value)
+                }
+                disabled={riskISOSaving}
+              >
+                <option value="Planned">
+                  Planned
+                </option>
+                <option value="In Progress">
+                  In Progress
+                </option>
+                <option value="Implemented">
+                  Implemented
+                </option>
+                <option value="Accepted">
+                  Accepted
+                </option>
+              </select>
+
+            </div>
+
+            <div className="form-group">
+
+              <label>Notes</label>
+
+              <textarea
+                value={notes}
+                onChange={(event) =>
+                  setNotes(event.target.value)
+                }
+                placeholder="Justificación o evidencia del tratamiento..."
+                rows="3"
+                disabled={riskISOSaving}
+              />
+
+            </div>
+
+            <button
+              className="primary-button"
+              disabled={
+                riskISOSaving ||
+                !selectedRisk ||
+                !selectedISOCode
+              }
+              onClick={handleLink}
+            >
+              {riskISOSaving
+                ? "Saving..."
+                : "Associate ISO Control"}
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {isoSoA && (
+        <div className="panel">
+
+          <div className="panel-header">
+
+            <div>
+              <h2>Statement of Applicability</h2>
+              <p>
+                Aplicabilidad, implementación y efectividad de los controles
+                ISO/IEC 27001:2022
+              </p>
+            </div>
+
+          </div>
+
+          {(() => {
+            const soaControls = Array.isArray(isoSoA?.controls)
+              ? isoSoA.controls
+              : [];
+
+            const applicableControls = soaControls.filter(
+              (control) => control.applicable !== false
+            );
+
+            const implementedControls = applicableControls.filter(
+              (control) =>
+                control.implementation_status === "Implemented"
+            );
+
+            const partialControls = applicableControls.filter(
+              (control) =>
+                control.implementation_status === "Partial"
+            );
+
+            const pendingControls = applicableControls.filter(
+              (control) =>
+                !control.implementation_status ||
+                control.implementation_status === "Not Implemented"
+            );
+
+            const averageEffectiveness = applicableControls.length
+              ? Math.round(
+                  applicableControls.reduce(
+                    (sum, control) =>
+                      sum + Number(control.effectiveness || 0),
+                    0
+                  ) / applicableControls.length
+                )
+              : 0;
+
+            return (
+              <>
+                <div className="stats-grid">
+
+                  <StatCard
+                    title="Controles aplicables"
+                    value={applicableControls.length}
+                  />
+
+                  <StatCard
+                    title="Implementados"
+                    value={implementedControls.length}
+                  />
+
+                  <StatCard
+                    title="Parciales"
+                    value={partialControls.length}
+                  />
+
+                  <StatCard
+                    title="Pendientes"
+                    value={pendingControls.length}
+                  />
+
+                  <StatCard
+                    title="Efectividad promedio"
+                    value={`${averageEffectiveness}%`}
+                  />
+
+                </div>
+
+                <div className="table-container">
+
+                  <table className="data-table">
+
+                    <thead>
+                      <tr>
+                        <th>Control</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Aplicable</th>
+                        <th>Implementación</th>
+                        <th>Efectividad</th>
+                        <th>Evidencia</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+
+                      {soaControls.map((control) => (
+
+                        <tr key={control.code}>
+
+                          <td>
+                            <strong>{control.code}</strong>
+                          </td>
+
+                          <td>
+                            <div>
+                              <strong>{control.name}</strong>
+
+                              {control.description && (
+                                <div className="muted-text">
+                                  {control.description}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+
+                          <td>
+                            {control.category || "—"}
+                          </td>
+
+                          <td>
+                            <label className="checkbox-inline">
+
+                              <input
+                                type="checkbox"
+                                checked={control.applicable !== false}
+                                disabled={isoSaving === control.code}
+                                onChange={(event) =>
+                                  saveISOControl(
+                                    control.code,
+                                    {
+                                      applicable:
+                                        event.target.checked
+                                    }
+                                  )
+                                }
+                              />
+
+                              {control.applicable !== false
+                                ? "Sí"
+                                : "No"}
+
+                            </label>
+                          </td>
+
+                          <td>
+
+                            <select
+                              value={
+                                control.implementation_status ||
+                                "Not Implemented"
+                              }
+                              disabled={
+                                isoSaving === control.code
+                              }
+                              onChange={(event) =>
+                                saveISOControl(
+                                  control.code,
+                                  {
+                                    implementation_status:
+                                      event.target.value
+                                  }
+                                )
+                              }
+                            >
+
+                              <option value="Not Implemented">
+                                Not Implemented
+                              </option>
+
+                              <option value="Partial">
+                                Partial
+                              </option>
+
+                              <option value="Implemented">
+                                Implemented
+                              </option>
+
+                            </select>
+
+                          </td>
+
+                          <td>
+
+                            <select
+                              value={Number(
+                                control.effectiveness || 0
+                              )}
+                              disabled={
+                                isoSaving === control.code
+                              }
+                              onChange={(event) =>
+                                saveISOControl(
+                                  control.code,
+                                  {
+                                    effectiveness:
+                                      Number(event.target.value)
+                                  }
+                                )
+                              }
+                            >
+
+                              <option value="0">0%</option>
+                              <option value="25">25%</option>
+                              <option value="50">50%</option>
+                              <option value="75">75%</option>
+                              <option value="100">100%</option>
+
+                            </select>
+
+                          </td>
+
+                          <td>
+
+                            <label className="checkbox-inline">
+
+                              <input
+                                type="checkbox"
+                                checked={
+                                  control.evidence_required !== false
+                                }
+                                disabled={
+                                  isoSaving === control.code
+                                }
+                                onChange={(event) =>
+                                  saveISOControl(
+                                    control.code,
+                                    {
+                                      evidence_required:
+                                        event.target.checked
+                                    }
+                                  )
+                                }
+                              />
+
+                              {control.evidence_required !== false
+                                ? "Requerida"
+                                : "No requerida"}
+
+                            </label>
+
+                          </td>
+
+                        </tr>
+
+                      ))}
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+                {soaControls.length === 0 && (
+                  <div className="empty-state">
+                    No hay controles disponibles en el Statement of
+                    Applicability.
+                  </div>
+                )}
+
+              </>
+            );
+          })()}
+
+        </div>
+      )}
+
+    </section>
+  );
+}

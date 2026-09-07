@@ -1,0 +1,156 @@
+[
+  {
+    "code": "A.5.1",
+    "name": "Políticas para la seguridad de la información",
+    "category": "Organizational",
+    "description": "Establecer, aprobar, comunicar y revisar políticas de seguridad de la información.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.7",
+    "name": "Inteligencia de amenazas",
+    "category": "Organizational",
+    "description": "Recopilar y analizar información relacionada con amenazas a la seguridad de la información.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.15",
+    "name": "Control de acceso",
+    "category": "Organizational",
+    "description": "Establecer reglas para controlar el acceso físico y lógico a la información.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.24",
+    "name": "Planificación y preparación para la gestión de incidentes",
+    "category": "Organizational",
+    "description": "Planificar y preparar la gestión de incidentes de seguridad de la información.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.25",
+    "name": "Evaluación y decisión sobre eventos de seguridad",
+    "category": "Organizational",
+    "description": "Evaluar los eventos de seguridad y determinar si constituyen incidentes.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.26",
+    "name": "Respuesta a incidentes de seguridad de la información",
+    "category": "Organizational",
+    "description": "Responder a los incidentes de seguridad de la información.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.27",
+    "name": "Aprendizaje de los incidentes de seguridad",
+    "category": "Organizational",
+    "description": "Utilizar el conocimiento obtenido de incidentes para mejorar la seguridad.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.28",
+    "name": "Recopilación de evidencias",
+    "category": "Organizational",
+    "description": "Establecer procedimientos para identificar, recopilar, adquirir y preservar evidencias.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.31",
+    "name": "Requisitos legales, estatutarios, regulatorios y contractuales",
+    "category": "Organizational",
+    "description": "Identificar y mantener actualizados los requisitos legales y contractuales aplicables.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.35",
+    "name": "Revisión independiente de la seguridad de la información",
+    "category": "Organizational",
+    "description": "Revisar independientemente el enfoque de la organización respecto a la seguridad de la información.",
+    "applicable": true
+  },
+  {
+    "code": "A.5.36",
+    "name": "Cumplimiento de políticas, reglas y estándares",
+    "category": "Organizational",
+    "description": "Revisar periódicamente el cumplimiento de políticas y estándares.",
+    "applicable": true
+  },
+  {
+    "code": "A.6.3",
+    "name": "Concienciación, educación y formación",
+    "category": "People",
+    "description": "Proporcionar formación y concienciación sobre seguridad de la información.",
+    "applicable": true
+  },
+  {
+    "code": "A.7.1",
+    "name": "Perímetros de seguridad física",
+    "category": "Physical",
+    "description": "Definir y utilizar perímetros de seguridad para proteger áreas que contienen información.",
+    "applicable": true
+  },
+  {
+    "code": "A.7.2",
+    "name": "Entrada física",
+    "category": "Physical",
+    "description": "Proteger las áreas seguras mediante controles de entrada adecuados.",
+    "applicable": true
+  },
+  {
+    "code": "A.8.2",
+    "name": "Derechos de acceso privilegiado",
+    "category": "Technological",
+    "description": "Gestionar la asignación y uso de derechos de acceso privilegiado.",
+    "applicable": true
+  },
+  {
+    "code": "A.8.5",
+    "name": "Autenticación segura",
+    "category": "Technological",
+    "description": "Implementar tecnologías y procedimientos de autenticación segura.",
+    "applicable": true
+  },
+  {
+    "code": "A.8.8",
+    "name": "Gestión de vulnerabilidades técnicas",
+    "category": "Technological",
+    "description": "Obtener información sobre vulnerabilidades y tomar medidas apropiadas.",
+    "applicable": true
+  },
+  {
+    "code": "A.8.9",
+    "name": "Gestión de configuración",
+    "category": "Technological",
+    "description": "Establecer y mantener configuraciones seguras.",
+    "applicable": true
+  },
+  {
+    "code": "A.8.15",
+    "name": "Registro de eventos",
+    "category": "Technological",
+    "description": "Registrar eventos relevantes para facilitar monitoreo y análisis.",
+    "applicable": true
+  },
+  {
+    "code": "A.8.16",
+    "name": "Actividades de monitoreo",
+    "category": "Technological",
+    "description": "Monitorear redes, sistemas y aplicaciones para detectar anomalías.",
+    "applicable": true
+  },
+  {
+    "code": "A.8.20",
+    "name": "Seguridad de redes",
+    "category": "Technological",
+    "description": "Proteger y administrar las redes para proteger la información.",
+    "applicable": true
+  },
+  {
+    "code": "A.8.24",
+    "name": "Uso de criptografía",
+    "category": "Technological",
+    "description": "Definir y aplicar reglas para el uso eficaz de criptografía.",
+    "applicable": true
+  }
+]
