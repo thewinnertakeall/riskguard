@@ -1,0 +1,300 @@
+import { useEffect, useMemo, useState } from "react";
+
+import DashboardView from "./views/DashboardView";
+import RiskRegisterView from "./views/RiskRegisterView";
+import IncidentsView from "./views/IncidentsView";
+import ControlsView from "./views/ControlsView";
+import ISO27001View from "./views/ISO27001View";
+import KnowledgeView from "./views/KnowledgeView";
+import MultiAgentView from "./views/MultiAgentView";
+import { useRisks } from "./hooks/useRisks";
+import { useRiskAnalysis } from "./hooks/useRiskAnalysis";
+import { useISO27001 } from "./hooks/useISO27001";
+
+import {
+  analyzeRisk,
+  getIncidents,
+  getRisks,
+  getSemanticStatus,
+  synchronizeSemanticGraph,
+  getISO27001Status,
+  getISO27001Controls,
+  getISO27001Compliance,
+  getISO27001SoA,
+  updateISO27001Control,
+  getRiskISOControls,
+  createRiskISOControl,
+  deleteRiskISOControl
+} from "./api";
+
+function App() {
+  const [activeSection, setActiveSection] = useState("dashboard");
+
+  const [selectedRisk, setSelectedRisk] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+
+  const [error, setError] = useState("");
+
+  const {
+    risks,
+    incidents,
+    semantic,
+    loading,
+    handleSemanticSync: handleSemanticSyncFromHook
+  } = useRisks({
+    setSelectedRisk,
+    setError
+  });
+
+  const {
+    isoStatus: isoStatusFromHook,
+    isoControls: isoControlsFromHook,
+    isoCompliance: isoComplianceFromHook,
+    isoSoA: isoSoAFromHook,
+    isoLoading: isoLoadingFromHook,
+    isoSaving: isoSavingFromHook,
+    riskISOControls: riskISOControlsFromHook,
+    riskISOLoading: riskISOLoadingFromHook,
+    riskISOSaving: riskISOSavingFromHook,
+    saveISOControl: saveISOControlFromHook,
+    loadRiskISOControls: loadRiskISOControlsFromHook,
+    handleCreateRiskISOControl: handleCreateRiskISOControlFromHook,
+    handleDeleteRiskISOControl: handleDeleteRiskISOControlFromHook
+  } = useISO27001({
+    selectedRisk,
+    setError
+  });
+
+  async function handleAnalyze(risk) {
+    try {
+      setSelectedRisk(risk);
+      setAnalysisLoading(true);
+      setError("");
+
+      const result = await analyzeRisk(risk.code);
+
+      setAnalysis(result);
+      setActiveSection("multiagent");
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+      setAnalysis(null);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  }
+
+  async function handleSemanticSync() {
+    try {
+      setSyncLoading(true);
+      setError("");
+
+      await synchronizeSemanticGraph();
+
+      if (typeof handleSemanticSyncFromHook === 'function') {
+         await handleSemanticSyncFromHook();
+      } else {
+         console.warn("handleSemanticSyncFromHook is not a function. Check useRisks hook.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setSyncLoading(false);
+    }
+  }
+
+  const statistics = useMemo(() => {
+    // Adding fallbacks to empty arrays if data isn't loaded yet to prevent .length errors
+    const safeRisks = risks || [];
+    const safeIncidents = incidents || [];
+    
+    const total = safeRisks.length;
+
+    const critical = safeRisks.filter(
+      (risk) => risk.risk_level === "Critical"
+    ).length;
+
+    const high = safeRisks.filter(
+      (risk) => risk.risk_level === "High"
+    ).length;
+
+    const medium = safeRisks.filter(
+      (risk) => risk.risk_level === "Medium"
+    ).length;
+
+    const low = safeRisks.filter(
+      (risk) => risk.risk_level === "Low"
+    ).length;
+
+    const openIncidents = safeIncidents.filter(
+      (incident) =>
+        String(incident.status || "").toLowerCase() === "open"
+    ).length;
+
+    return {
+      total,
+      critical,
+      high,
+      medium,
+      low,
+      incidents: safeIncidents.length,
+      openIncidents
+    };
+  }, [risks, incidents]);
+
+  const navigation = [
+    { id: "dashboard", icon: "▦", label: "Dashboard" },
+    { id: "risks", icon: "⚠", label: "Risk Register" },
+    { id: "incidents", icon: "◉", label: "Incidents" },
+    { id: "controls", icon: "◆", label: "Controls" },
+    { id: "iso27001", icon: "✓", label: "ISO 27001" },
+    { id: "knowledge", icon: "◈", label: "Knowledge Graph" },
+    { id: "multiagent", icon: "◎", label: "Multi-Agent" }
+  ];
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brand-mark">R</div>
+          <div>
+            <div className="brand-name">RiskGuard</div>
+            <div className="brand-subtitle">Safety Intelligence</div>
+          </div>
+        </div>
+
+        <nav className="navigation">
+          {navigation.map((item) => (
+            <button
+              key={item.id}
+              className={`nav-item ${activeSection === item.id ? "active" : ""}`}
+              onClick={() => setActiveSection(item.id)}
+            >
+              <span>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="architecture-box">
+          <div className="architecture-title">Intelligent Architecture</div>
+          <div className="architecture-flow">
+            <span>SQL</span>
+            <b>→</b>
+            <span>RDF</span>
+            <b>→</b>
+            <span>OWL</span>
+          </div>
+          <div className="architecture-flow">
+            <span>SPARQL</span>
+            <b>→</b>
+            <span>Agents</span>
+          </div>
+        </div>
+      </aside>
+
+      <main className="main-content">
+        <header className="topbar">
+          <div>
+            <div className="eyebrow">OCCUPATIONAL RISK MANAGEMENT</div>
+            <h1>
+              {activeSection === "dashboard" && "Risk Intelligence Dashboard"}
+              {activeSection === "risks" && "Risk Register"}
+              {activeSection === "incidents" && "Incident Management"}
+              {activeSection === "controls" && "Risk Controls"}
+              {activeSection === "iso27001" && "ISO 27001"}
+              {activeSection === "knowledge" && "Knowledge Graph"}
+              {activeSection === "multiagent" && "Multi-Agent Intelligence"}
+            </h1>
+            <p>Semantic and multi-agent analysis of occupational risks.</p>
+          </div>
+          
+          <div className="topbar-actions">
+            {error && (
+               <div className="error-banner" style={{ color: 'red', marginRight: '1rem' }}>
+                  {error}
+               </div>
+            )}
+            <button
+              className="secondary-button"
+              onClick={() => window.location.reload()}
+              disabled={loading}
+            >
+              ↻ Refresh
+            </button>
+          </div>
+        </header>
+
+        {activeSection === "dashboard" && (
+          <DashboardView
+            risks={risks || []}
+            incidents={incidents || []}
+            semantic={semantic}
+            statistics={statistics}
+            selectedRisk={selectedRisk}
+          />
+        )}
+        
+        {activeSection === "risks" && (
+          <RiskRegisterView 
+            risks={risks || []} 
+            onAnalyze={handleAnalyze}
+          />
+        )}
+
+        {activeSection === "incidents" && (
+          <IncidentsView
+            incidents={incidents || []}
+            statistics={statistics}
+          />
+        )}
+
+        {activeSection === "controls" && (
+          <ControlsView risks={risks || []} />
+        )}
+
+        {activeSection === "iso27001" && (
+           <ISO27001View 
+             isoStatus={isoStatusFromHook}
+             isoControls={isoControlsFromHook}
+             isoCompliance={isoComplianceFromHook}
+             isoSoA={isoSoAFromHook}
+             isoLoading={isoLoadingFromHook}
+             isoSaving={isoSavingFromHook}
+             saveISOControl={saveISOControlFromHook}
+             selectedRisk={selectedRisk}
+             riskISOControls={riskISOControlsFromHook}
+             riskISOLoading={riskISOLoadingFromHook}
+             riskISOSaving={riskISOSavingFromHook}
+             loadRiskISOControls={loadRiskISOControlsFromHook}
+             handleCreateRiskISOControl={handleCreateRiskISOControlFromHook}
+             handleDeleteRiskISOControl={handleDeleteRiskISOControlFromHook}
+           />
+        )}
+
+        {activeSection === "knowledge" && (
+          <KnowledgeView 
+             semantic={semantic} 
+             onSync={handleSemanticSync} 
+             syncLoading={syncLoading} 
+          />
+        )}
+
+        {activeSection === "multiagent" && (
+          <MultiAgentView 
+             analysis={analysis} 
+             analysisLoading={analysisLoading} 
+             selectedRisk={selectedRisk}
+          />
+        )}
+
+      </main>
+    </div>
+  );
+}
+
+export default App;

@@ -1,0 +1,35 @@
+"""
+RF-06
+EXTRACT: obtiene registros desde la fuente pública oficial.
+"""
+
+import requests
+
+from scripts.rf06.config import (
+    SOURCE_URL,
+    API_LIMIT,
+)
+
+
+def extract_records():
+    """
+    Obtiene registros originales desde la API pública.
+    No transforma los nombres de los campos.
+    """
+
+    response = requests.get(
+        SOURCE_URL,
+        params={"$limit": API_LIMIT},
+        timeout=30,
+    )
+
+    response.raise_for_status()
+
+    records = response.json()
+
+    if not isinstance(records, list):
+        raise ValueError(
+            "La respuesta de la API no es una lista"
+        )
+
+    return records

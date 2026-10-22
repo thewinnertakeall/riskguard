@@ -1,0 +1,68 @@
+import StatCard from "../components/common/StatCard";
+import RiskTable from "../components/risk/RiskTable";
+
+export default function RiskRegisterView({
+  risks = [],
+  loading = false,
+  selectedRisk,
+  handleAnalyze,
+  statistics = {}
+}) {
+  return (
+    <>
+      <section className="stats-grid">
+        <StatCard
+          title="Total Risks"
+          value={statistics.total ?? risks.length}
+          icon="◈"
+          description="Registered risks"
+        />
+
+        <StatCard
+          title="Critical"
+          value={statistics.critical ?? 0}
+          icon="!"
+          variant="critical"
+          description="Immediate attention"
+        />
+
+        <StatCard
+          title="High"
+          value={statistics.high ?? 0}
+          icon="▲"
+          variant="high"
+          description="Requires control"
+        />
+
+        <StatCard
+          title="Low / Medium"
+          value={(statistics.low ?? 0) + (statistics.medium ?? 0)}
+          icon="●"
+          description="Lower priority risks"
+        />
+      </section>
+
+      <div className="panel">
+        <div className="panel-header">
+          <div>
+            <h2>Complete Risk Register</h2>
+            <p>
+              Occupational risks currently registered in RiskGuard.
+            </p>
+          </div>
+
+          <span className="count-badge">
+            {risks.length} risks
+          </span>
+        </div>
+
+        <RiskTable
+          risks={risks}
+          loading={loading}
+          selectedRisk={selectedRisk}
+          handleAnalyze={handleAnalyze}
+        />
+      </div>
+    </>
+  );
+}

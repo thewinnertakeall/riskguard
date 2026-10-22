@@ -1,0 +1,31 @@
+@prefix rm: <http://recmind.org/ontology#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+rm:Genre_SciFi a rm:Genre ;
+    rdfs:label "Ciencia Ficcion" .
+
+rm:Content_MOV101 a rm:Movie ;
+    rm:contentId "MOV-101" ;
+    rm:title "Matrix" ;
+    rm:releaseYear 1999 ;
+    rm:hasGenre rm:Genre_SciFi .
+
+rm:User_USR001 a rm:User ;
+    rm:userId "USR-001" ;
+    rm:userName "Carlos Perez" ;
+    rm:hasInterestInGenre rm:Genre_SciFi .
+
+rm:Rating_RAT501 a rm:Rating ;
+    rm:ratingValue "4.8"^^xsd:float ;
+    rm:ratingTimestamp "2026-10-21T10:00:00"^^xsd:dateTime ;
+    rm:ratingForContent rm:Content_MOV101 .
+
+rm:User_USR001 rm:hasRated rm:Rating_RAT501 .
+
+rm:Rec_REC901 a rm:Recommendation ;
+    rm:matchScore "0.95"^^xsd:float ;
+    rm:recommendationReason "Alta afinidad con genero Ciencia Ficcion" ;
+    rm:recommendsContent rm:Content_MOV101 .
+
+rm:User_USR001 rm:hasRecommendation rm:Rec_REC901 .

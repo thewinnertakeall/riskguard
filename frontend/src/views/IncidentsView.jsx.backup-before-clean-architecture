@@ -1,0 +1,456 @@
+import { useEffect, useState } from "react";
+
+import StatCard from "../components/common/StatCard";
+import RiskBadge from "../components/common/RiskBadge";
+
+const EMPTY_FORM = {
+  code: "",
+  title: "",
+  description: "",
+  incident_date: "",
+  incident_type: "",
+  severity: "",
+  location_id: "",
+  status: "Open"
+};
+
+export default function IncidentsView({
+  incidents = [],
+  statistics,
+  onCreateIncident,
+  onUpdateIncident,
+  onDeleteIncident
+}) {
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [formError, setFormError] = useState("");
+
+  const isEditing = editingId !== null;
+
+  useEffect(() => {
+    if (!isEditing) {
+      setForm(EMPTY_FORM);
+    }
+  }, [isEditing]);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setFormError("");
+
+    if (!form.code.trim()) {
+      setFormError("El código del incidente es obligatorio.");
+      return;
+    }
+
+    if (!form.title.trim()) {
+      setFormError("El título del incidente es obligatorio.");
+      return;
+    }
+
+    const payload = {
+      code: form.code.trim(),
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      incident_date: form.incident_date || null,
+      incident_type: form.incident_type.trim() || null,
+      severity: form.severity || null,
+      location_id: form.location_id
+        ? Number(form.location_id)
+        : null,
+      status: form.status || "Open"
+    };
+
+    try {
+      setSaving(true);
+
+      if (isEditing) {
+        await onUpdateIncident(editingId, payload);
+      } else {
+        await onCreateIncident(payload);
+      }
+
+      setForm(EMPTY_FORM);
+      setEditingId(null);
+      setFormError("");
+    } catch (error) {
+      console.error(error);
+      setFormError(error.message || "No se pudo guardar el incidente.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (incident) => {
+    setEditingId(incident.id);
+
+    setForm({
+      code: incident.code || "",
+      title: incident.title || "",
+      description: incident.description || "",
+      incident_date: incident.incident_date || "",
+      incident_type: incident.incident_type || "",
+      severity: incident.severity || "",
+      location_id:
+        incident.location_id !== null &&
+        incident.location_id !== undefined
+          ? String(incident.location_id)
+          : "",
+      status: incident.status || "Open"
+    });
+
+    setFormError("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError("");
+  };
+
+  const handleDelete = async (incident) => {
+    const confirmed = window.confirm(
+      `¿Eliminar el incidente ${incident.code || incident.id}?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingId(incident.id);
+
+      await onDeleteIncident(incident.id);
+
+      if (editingId === incident.id) {
+        handleCancelEdit();
+      }
+    } catch (error) {
+      console.error(error);
+      setFormError(
+        error.message || "No se pudo eliminar el incidente."
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const closedIncidents = incidents.filter(
+    (incident) =>
+      String(incident.status || "").toLowerCase() === "closed"
+  ).length;
+
+  return (
+    <>
+      <section className="stats-grid">
+        <StatCard
+          title="Total Incidents"
+          value={statistics.incidents}
+          icon="●"
+          variant="incident"
+          description="Registered incidents"
+        />
+
+        <StatCard
+          title="Open"
+          value={statistics.openIncidents}
+          icon="!"
+          variant="critical"
+          description="Require attention"
+        />
+
+        <StatCard
+          title="Closed"
+          value={closedIncidents}
+          icon="✓"
+          description="Resolved incidents"
+        />
+      </section>
+
+      <div className="panel">
+        <div className="panel-header">
+          <div>
+            <h2>{isEditing ? "Edit Incident" : "New Incident"}</h2>
+            <p>
+              {isEditing
+                ? "Update the selected incident."
+                : "Register a new incident in RiskGuard."}
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "16px",
+              padding: "20px 0"
+            }}
+          >
+            <label>
+              <strong>Code</strong>
+              <input
+                name="code"
+                value={form.code}
+                onChange={handleChange}
+                placeholder="INC-002"
+                maxLength={50}
+                required
+              />
+            </label>
+
+            <label>
+              <strong>Title</strong>
+              <input
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                placeholder="Incident title"
+                maxLength={200}
+                required
+              />
+            </label>
+
+            <label>
+              <strong>Date</strong>
+              <input
+                type="date"
+                name="incident_date"
+                value={form.incident_date}
+                onChange={handleChange}
+              />
+            </label>
+
+            <label>
+              <strong>Type</strong>
+              <input
+                name="incident_type"
+                value={form.incident_type}
+                onChange={handleChange}
+                placeholder="Accident"
+              />
+            </label>
+
+            <label>
+              <strong>Severity</strong>
+              <select
+                name="severity"
+                value={form.severity}
+                onChange={handleChange}
+              >
+                <option value="">Select severity</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </label>
+
+            <label>
+              <strong>Status</strong>
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+              >
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </label>
+
+            <label>
+              <strong>Location ID</strong>
+              <input
+                type="number"
+                name="location_id"
+                value={form.location_id}
+                onChange={handleChange}
+                min="1"
+                placeholder="1"
+              />
+            </label>
+
+            <label style={{ gridColumn: "1 / -1" }}>
+              <strong>Description</strong>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Describe what happened..."
+                rows="4"
+              />
+            </label>
+          </div>
+
+          {formError && (
+            <div className="error-message">
+              {formError}
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginBottom: "20px"
+            }}
+          >
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={saving}
+            >
+              {saving
+                ? "Saving..."
+                : isEditing
+                  ? "Update incident"
+                  : "Create incident"}
+            </button>
+
+            {isEditing && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleCancelEdit}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">
+          <div>
+            <h2>Incident Register</h2>
+            <p>Incidents associated with occupational risks.</p>
+          </div>
+
+          <span className="count-badge">
+            {incidents.length} incidents
+          </span>
+        </div>
+
+        {incidents.length === 0 ? (
+          <div className="empty-state">
+            No incidents registered.
+          </div>
+        ) : (
+          <div className="risk-table-wrapper">
+            <table className="risk-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Incident</th>
+                  <th>Type</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {incidents.map((incident, index) => (
+                  <tr
+                    key={
+                      incident.id ||
+                      incident.code ||
+                      index
+                    }
+                  >
+                    <td>
+                      <strong>
+                        {incident.code || "—"}
+                      </strong>
+                    </td>
+
+                    <td>
+                      <div className="risk-name">
+                        {incident.title ||
+                          incident.name ||
+                          incident.description ||
+                          "Incident"}
+                      </div>
+                    </td>
+
+                    <td>
+                      {incident.incident_type || "—"}
+                    </td>
+
+                    <td>
+                      <RiskBadge
+                        level={
+                          incident.severity ||
+                          "Unknown"
+                        }
+                      />
+                    </td>
+
+                    <td>
+                      {incident.status || "—"}
+                    </td>
+
+                    <td>
+                      {incident.incident_date || "—"}
+                    </td>
+
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px"
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          onClick={() =>
+                            handleEdit(incident)
+                          }
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          className="danger-button"
+                          onClick={() =>
+                            handleDelete(incident)
+                          }
+                          disabled={
+                            deletingId === incident.id
+                          }
+                        >
+                          {deletingId === incident.id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

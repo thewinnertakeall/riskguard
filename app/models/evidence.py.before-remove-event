@@ -1,0 +1,108 @@
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    ForeignKey,
+)
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from app.database import Base
+
+
+class Evidence(Base):
+    __tablename__ = "evidence"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    code = Column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    title = Column(
+        String(255),
+        nullable=False
+    )
+
+    description = Column(
+        Text
+    )
+
+    evidence_type = Column(
+        String(100)
+    )
+
+    file_path = Column(
+        Text
+    )
+
+    source = Column(
+        String(255)
+    )
+
+    hash_sha256 = Column(
+        String(64)
+    )
+
+    status = Column(
+        String(50),
+        default="Active"
+    )
+
+    collected_at = Column(
+        DateTime
+    )
+
+    owner = Column(
+        String(255)
+    )
+
+    iso_control_id = Column(
+        Integer,
+        ForeignKey("iso_controls.id"),
+        nullable=True
+    )
+
+    risk_id = Column(
+        Integer,
+        ForeignKey("risks.id"),
+        nullable=True
+    )
+
+    event_id = Column(
+        Integer,
+        ForeignKey("events.id"),
+        nullable=True
+    )
+
+    created_at = Column(
+        DateTime,
+        server_default=func.current_timestamp()
+    )
+
+    updated_at = Column(
+        DateTime,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp()
+    )
+
+    iso_control = relationship(
+        "ISOControl"
+    )
+
+    risk = relationship(
+        "Risk"
+    )
+
+    event = relationship(
+        "Event"
+    )

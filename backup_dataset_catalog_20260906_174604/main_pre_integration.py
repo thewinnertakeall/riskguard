@@ -1,0 +1,732 @@
+from app.iso27001.routers.iso_routes import router as iso27001_router
+from app.models.iso_control import ISOControl
+
+# ============================================================
+# PHASE B - OOP ARCHITECTURE API
+# ============================================================
+
+from presentation.api.routes.risk_routes import router as risk_v2_router
+from presentation.api.routes.risk_iso_routes import router as risk_iso_router
+from presentation.api.routes.evidence_routes import router as evidence_router
+from scripts.rf07.router import router as rf07_router
+
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
+
+from . import crud
+from .database import Base, engine, get_db
+from .schemas import (
+    AreaCreate,
+    AreaResponse,
+    CauseCreate,
+    CauseResponse,
+    CauseUpdate,
+    ControlCreate,
+    ControlResponse,
+    ControlUpdate,
+    IncidentCreate,
+    IncidentResponse,
+    IncidentUpdate,
+    LocationCreate,
+    LocationResponse,
+    ProcessCreate,
+    ProcessResponse,
+    RiskCreate,
+    RiskResponse,
+    RiskUpdate,
+)
+
+
+Base.metadata.create_all(bind=engine)
+
+
+app = FastAPI(
+    title="RiskGuard - Occupational Risk Management",
+    description=(
+        "Integrated occupational risk management "
+        "API prepared for RDF, OWL, SPARQL, "
+        "reasoning and multi-agent intelligence."
+    ),
+    version="1.1.0"
+)
+
+
+app.include_router(iso27001_router)
+
+@app.get("/")
+def root():
+    return {
+        "project": "RiskGuard",
+        "version": "1.1.0",
+        "status": "operational",
+        "architecture": [
+            "SQL",
+            "RDF",
+            "OWL",
+            "SPARQL",
+            "Reasoning",
+            "Multi-Agent System"
+        ]
+    }
+
+
+# ============================================================
+# RISKS
+# ============================================================
+
+@app.post(
+    "/api/risks",
+    response_model=RiskResponse,
+    status_code=201
+)
+def create_risk(
+    risk: RiskCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.create_risk(db, risk)
+
+
+@app.get(
+    "/api/risks",
+    response_model=list[RiskResponse]
+)
+def get_risks(
+    db: Session = Depends(get_db)
+):
+    return crud.get_risks(db)
+
+
+@app.get(
+    "/api/risks/{risk_id}",
+    response_model=RiskResponse
+)
+def get_risk(
+    risk_id: int,
+    db: Session = Depends(get_db)
+):
+    risk = crud.get_risk(db, risk_id)
+
+    if not risk:
+        raise HTTPException(
+            status_code=404,
+            detail="Risk not found"
+        )
+
+    return risk
+
+
+@app.put(
+    "/api/risks/{risk_id}",
+    response_model=RiskResponse
+)
+def update_risk(
+    risk_id: int,
+    risk: RiskUpdate,
+    db: Session = Depends(get_db)
+):
+    result = crud.update_risk(
+        db,
+        risk_id,
+        risk
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Risk not found"
+        )
+
+    return result
+
+
+@app.delete("/api/risks/{risk_id}")
+def delete_risk(
+    risk_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.delete_risk(
+        db,
+        risk_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Risk not found"
+        )
+
+    return {
+        "message": "Risk deleted successfully",
+        "id": risk_id
+    }
+
+
+# ============================================================
+# CAUSES
+# ============================================================
+
+@app.post(
+    "/api/causes",
+    response_model=CauseResponse,
+    status_code=201
+)
+def create_cause(
+    cause: CauseCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.create_cause(db, cause)
+
+
+@app.get(
+    "/api/causes",
+    response_model=list[CauseResponse]
+)
+def get_causes(
+    db: Session = Depends(get_db)
+):
+    return crud.get_causes(db)
+
+
+@app.get(
+    "/api/causes/{cause_id}",
+    response_model=CauseResponse
+)
+def get_cause(
+    cause_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.get_cause(
+        db,
+        cause_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Cause not found"
+        )
+
+    return result
+
+
+@app.put(
+    "/api/causes/{cause_id}",
+    response_model=CauseResponse
+)
+def update_cause(
+    cause_id: int,
+    cause: CauseUpdate,
+    db: Session = Depends(get_db)
+):
+    result = crud.update_cause(
+        db,
+        cause_id,
+        cause
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Cause not found"
+        )
+
+    return result
+
+
+@app.delete("/api/causes/{cause_id}")
+def delete_cause(
+    cause_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.delete_cause(
+        db,
+        cause_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Cause not found"
+        )
+
+    return {
+        "message": "Cause deleted successfully",
+        "id": cause_id
+    }
+
+
+# ============================================================
+# CONTROLS
+# ============================================================
+
+@app.post(
+    "/api/controls",
+    response_model=ControlResponse,
+    status_code=201
+)
+def create_control(
+    control: ControlCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.create_control(
+        db,
+        control
+    )
+
+
+@app.get(
+    "/api/controls",
+    response_model=list[ControlResponse]
+)
+def get_controls(
+    db: Session = Depends(get_db)
+):
+    return crud.get_controls(db)
+
+
+@app.get(
+    "/api/controls/{control_id}",
+    response_model=ControlResponse
+)
+def get_control(
+    control_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.get_control(
+        db,
+        control_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Control not found"
+        )
+
+    return result
+
+
+@app.put(
+    "/api/controls/{control_id}",
+    response_model=ControlResponse
+)
+def update_control(
+    control_id: int,
+    control: ControlUpdate,
+    db: Session = Depends(get_db)
+):
+    result = crud.update_control(
+        db,
+        control_id,
+        control
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Control not found"
+        )
+
+    return result
+
+
+@app.delete("/api/controls/{control_id}")
+def delete_control(
+    control_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.delete_control(
+        db,
+        control_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Control not found"
+        )
+
+    return {
+        "message": "Control deleted successfully",
+        "id": control_id
+    }
+
+
+# ============================================================
+# INCIDENTS
+# ============================================================
+
+@app.post(
+    "/api/incidents",
+    response_model=IncidentResponse,
+    status_code=201
+)
+def create_incident(
+    incident: IncidentCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.create_incident(
+        db,
+        incident
+    )
+
+
+@app.get(
+    "/api/incidents",
+    response_model=list[IncidentResponse]
+)
+def get_incidents(
+    db: Session = Depends(get_db)
+):
+    return crud.get_incidents(db)
+
+
+@app.get(
+    "/api/incidents/{incident_id}",
+    response_model=IncidentResponse
+)
+def get_incident(
+    incident_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.get_incident(
+        db,
+        incident_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found"
+        )
+
+    return result
+
+
+@app.put(
+    "/api/incidents/{incident_id}",
+    response_model=IncidentResponse
+)
+def update_incident(
+    incident_id: int,
+    incident: IncidentUpdate,
+    db: Session = Depends(get_db)
+):
+    result = crud.update_incident(
+        db,
+        incident_id,
+        incident
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found"
+        )
+
+    return result
+
+
+@app.delete("/api/incidents/{incident_id}")
+def delete_incident(
+    incident_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.delete_incident(
+        db,
+        incident_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found"
+        )
+
+    return {
+        "message": "Incident deleted successfully",
+        "id": incident_id
+    }
+
+
+# ============================================================
+# PROCESSES
+# ============================================================
+
+@app.post(
+    "/api/processes",
+    response_model=ProcessResponse,
+    status_code=201
+)
+def create_process(
+    process: ProcessCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.create_process(
+        db,
+        process
+    )
+
+
+@app.get(
+    "/api/processes",
+    response_model=list[ProcessResponse]
+)
+def get_processes(
+    db: Session = Depends(get_db)
+):
+    return crud.get_processes(db)
+
+
+# ============================================================
+# AREAS
+# ============================================================
+
+@app.post(
+    "/api/areas",
+    response_model=AreaResponse,
+    status_code=201
+)
+def create_area(
+    area: AreaCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.create_area(
+        db,
+        area
+    )
+
+
+@app.get(
+    "/api/areas",
+    response_model=list[AreaResponse]
+)
+def get_areas(
+    db: Session = Depends(get_db)
+):
+    return crud.get_areas(db)
+
+
+# ============================================================
+# LOCATIONS
+# ============================================================
+
+@app.post(
+    "/api/locations",
+    response_model=LocationResponse,
+    status_code=201
+)
+def create_location(
+    location: LocationCreate,
+    db: Session = Depends(get_db)
+):
+    return crud.create_location(
+        db,
+        location
+    )
+
+
+@app.get(
+    "/api/locations",
+    response_model=list[LocationResponse]
+)
+def get_locations(
+    db: Session = Depends(get_db)
+):
+    return crud.get_locations(db)
+
+
+# ============================================================
+# RELATIONSHIPS
+# ============================================================
+
+@app.post(
+    "/api/risks/{risk_id}/causes/{cause_id}"
+)
+def assign_cause(
+    risk_id: int,
+    cause_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.assign_cause_to_risk(
+        db,
+        risk_id,
+        cause_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Risk or cause not found"
+        )
+
+    return {
+        "message": "Cause assigned to risk",
+        "risk_id": risk_id,
+        "cause_id": cause_id
+    }
+
+
+@app.post(
+    "/api/risks/{risk_id}/controls/{control_id}"
+)
+def assign_control(
+    risk_id: int,
+    control_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.assign_control_to_risk(
+        db,
+        risk_id,
+        control_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Risk or control not found"
+        )
+
+    return {
+        "message": "Control assigned to risk",
+        "risk_id": risk_id,
+        "control_id": control_id
+    }
+
+
+@app.post(
+    "/api/risks/{risk_id}/incidents/{incident_id}"
+)
+def assign_incident(
+    risk_id: int,
+    incident_id: int,
+    db: Session = Depends(get_db)
+):
+    result = crud.assign_incident_to_risk(
+        db,
+        risk_id,
+        incident_id
+    )
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Risk or incident not found"
+        )
+
+    return {
+        "message": "Incident assigned to risk",
+        "risk_id": risk_id,
+        "incident_id": incident_id
+    }
+
+
+# ============================================================
+# MULTI-AGENT API
+# ============================================================
+
+from agents.coordinator_agent import CoordinatorAgent
+
+
+# ============================================================
+# COMPLETE MULTI-AGENT ANALYSIS
+# ============================================================
+
+@app.get("/api/agents/analyze/{risk_code}")
+def analyze_risk_with_agents(risk_code: str):
+
+    coordinator = CoordinatorAgent()
+
+    result = coordinator.analyze(
+        risk_code
+    )
+
+    return result
+
+
+# ============================================================
+# RECOMMENDATION ONLY
+# ============================================================
+
+@app.get("/api/agents/recommend/{risk_code}")
+def recommend_risk(risk_code: str):
+
+    coordinator = CoordinatorAgent()
+
+    result = coordinator.analyze(
+        risk_code
+    )
+
+    if not result["success"]:
+
+        return result
+
+    return {
+        "success": True,
+        "risk_code": risk_code,
+        "recommendation": result[
+            "recommendation"
+        ]
+    }
+
+# ============================================================
+# SEMANTIC KNOWLEDGE GRAPH API
+# ============================================================
+
+from semantic.sync import synchronize_knowledge_graph
+
+
+@app.post("/api/semantic/sync")
+def synchronize_semantic_knowledge_graph():
+    """
+    Synchronize SQL database with the RDF knowledge graph.
+    """
+
+    synchronize_knowledge_graph()
+
+    return {
+        "success": True,
+        "message": "Knowledge graph synchronized successfully",
+        "rdf_file": "data/riskguard.ttl"
+    }
+
+
+@app.get("/api/semantic/status")
+def semantic_status():
+    """
+    Return the current semantic knowledge graph status.
+    """
+
+    from pathlib import Path
+    from rdflib import Graph
+
+    rdf_file = Path("data/riskguard.ttl")
+
+    if not rdf_file.exists():
+        return {
+            "success": False,
+            "status": "missing",
+            "rdf_file": str(rdf_file),
+            "triples": 0
+        }
+
+    graph = Graph()
+    graph.parse(
+        str(rdf_file),
+        format="turtle"
+    )
+
+    return {
+        "success": True,
+        "status": "available",
+        "rdf_file": str(rdf_file),
+        "triples": len(graph)
+    }
+
+
+# Phase B modular risk API
+app.include_router(risk_v2_router)
+app.include_router(risk_iso_router)
+app.include_router(evidence_router)
+app.include_router(rf07_router)
+

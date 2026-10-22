@@ -83,7 +83,10 @@ def create_risk(
     risk: RiskCreate,
     db: Session = Depends(get_db)
 ):
-    return crud.create_risk(db, risk)
+    try:
+        return crud.create_risk(db, risk)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @app.get(
@@ -365,10 +368,10 @@ def create_incident(
     incident: IncidentCreate,
     db: Session = Depends(get_db)
 ):
-    return crud.create_incident(
-        db,
-        incident
-    )
+    try:
+        return crud.create_incident(db, incident)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @app.get(

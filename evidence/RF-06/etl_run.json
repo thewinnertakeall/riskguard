@@ -1,0 +1,11 @@
+{
+  "rf": "RF-06",
+  "executed_at": "2026-09-06T05:58:39.574455+00:00",
+  "extract_records": 1000,
+  "transform_records": 1000,
+  "load": {
+    "inserted": 0,
+    "duplicates": 1000,
+    "total": 1000
+  }
+}

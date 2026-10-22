@@ -1,0 +1,113 @@
+import RiskBadge from "../common/RiskBadge";
+
+export default function IncidentTable({
+  incidents = [],
+  onEdit,
+  onDelete,
+  deletingId = null
+}) {
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        Incident Register
+      </div>
+
+      {incidents.length === 0 ? (
+        <div className="empty-state">
+          No incidents registered.
+        </div>
+      ) : (
+        <div className="risk-table-wrapper">
+          <table className="risk-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Location</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {incidents.map((incident) => (
+                <tr key={incident.id}>
+                  <td>{incident.code}</td>
+
+                  <td>
+                    <div className="risk-name">
+                      {incident.title ||
+                        incident.name ||
+                        incident.description ||
+                        "Incident"}
+                    </div>
+                  </td>
+
+                  <td>
+                    {incident.incident_date || "—"}
+                  </td>
+
+                  <td>
+                    {incident.incident_type || "—"}
+                  </td>
+
+                  <td>
+                    {incident.severity ? (
+                      <RiskBadge severity={incident.severity} />
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+
+                  <td>
+                    <span
+                      className={
+                        String(incident.status || "").toLowerCase() ===
+                        "closed"
+                          ? "status-badge status-closed"
+                          : "status-badge status-open"
+                      }
+                    >
+                      {incident.status || "Open"}
+                    </span>
+                  </td>
+
+                  <td>
+                    {incident.location_id ?? "—"}
+                  </td>
+
+                  <td>
+                    <div className="table-actions">
+                      <button
+                        type="button"
+                        className="secondary-button small-button"
+                        onClick={() => onEdit(incident)}
+                        disabled={deletingId === incident.id}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        className="danger-button small-button"
+                        onClick={() => onDelete(incident)}
+                        disabled={deletingId === incident.id}
+                      >
+                        {deletingId === incident.id
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

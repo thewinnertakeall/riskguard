@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import models
@@ -20,12 +21,16 @@ from .schemas import (
 # RISK
 # ============================================================
 
+# DUPLICATE_CODE_HANDLING
 def create_risk(db: Session, risk: RiskCreate):
     data = risk.model_dump()
 
-    data["risk_score"] = (
-        data["probability"] * data["impact"]
-    )
+    if db.query(models.Risk).filter(
+        models.Risk.code == data["code"]
+    ).first():
+        raise ValueError(f"Risk code '{data['code']}' already exists")
+
+    data["risk_score"] = data["probability"] * data["impact"]
 
     if data["risk_score"] <= 4:
         data["risk_level"] = "Low"
@@ -38,9 +43,19 @@ def create_risk(db: Session, risk: RiskCreate):
 
     db_risk = models.Risk(**data)
 
-    db.add(db_risk)
-    db.commit()
-    db.refresh(db_risk)
+    try:
+        db.add(db_risk)
+        db.commit()
+        db.refresh(db_risk)
+    except IntegrityError as exc:
+        db.rollback()
+        if db.query(models.Risk).filter(
+            models.Risk.code == data["code"]
+        ).first():
+            raise ValueError(
+                f"Risk code '{data['code']}' already exists"
+            ) from exc
+        raise
 
     return db_risk
 
@@ -256,17 +271,35 @@ def delete_control(
 # INCIDENT
 # ============================================================
 
+# DUPLICATE_CODE_HANDLING
 def create_incident(
     db: Session,
     incident: IncidentCreate
 ):
-    db_incident = models.Incident(
-        **incident.model_dump()
-    )
+    data = incident.model_dump()
 
-    db.add(db_incident)
-    db.commit()
-    db.refresh(db_incident)
+    if db.query(models.Incident).filter(
+        models.Incident.code == data["code"]
+    ).first():
+        raise ValueError(
+            f"Incident code '{data['code']}' already exists"
+        )
+
+    db_incident = models.Incident(**data)
+
+    try:
+        db.add(db_incident)
+        db.commit()
+        db.refresh(db_incident)
+    except IntegrityError as exc:
+        db.rollback()
+        if db.query(models.Incident).filter(
+            models.Incident.code == data["code"]
+        ).first():
+            raise ValueError(
+                f"Incident code '{data['code']}' already exists"
+            ) from exc
+        raise
 
     return db_incident
 
@@ -451,18 +484,23 @@ def assign_incident_to_risk(
     incident_id: int
 ):
     risk = get_risk(db, risk_id)
-    incident = get_incident(
-        db,
-        incident_id
-    )
+    incident = get_incident(db, incident_id)
 
-    if not risk or not incident:
+    if risk is None or incident is None:
         return None
 
-    if incident not in risk.incidents:
-        risk.incidents.append(incident)
+    if incident in risk.incidents:
+        return risk
 
-    db.commit()
-    db.refresh(risk)
+    try:
+        risk.incidents.append(incident)
+        db.commit()
+        db.refresh(risk)
+    except IntegrityError:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
     return risk

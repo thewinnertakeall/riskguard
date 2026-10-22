@@ -1,0 +1,50 @@
+============================================================
+                 RISKGUARD - RF-01
+                 DIVIDE Y VENCERAS
+============================================================
+
+Fecha: Sat Sep  5 11:43:01 PM -05 2026
+Proyecto: /home/thewinnertakeall/projects/riskguard
+Evidencia: /home/thewinnertakeall/projects/riskguard/evidence/RF-01/audit_20260905_234301.txt
+
+RF-01 - GESTION DE RIESGOS
+
+=== ENDPOINTS ===
+141:@app.delete("/api/risks/{risk_id}")
+
+=== CRUD ===
+23:def create_risk(db: Session, risk: RiskCreate):
+48:def get_risks(db: Session):
+52:def get_risk(db: Session, risk_id: int):
+60:def update_risk(
+99:def delete_risk(db: Session, risk_id: int):
+115:def create_cause(db: Session, cause: CauseCreate):
+181:def create_control(
+259:def create_incident(
+339:def create_process(
+362:def create_area(
+385:def create_location(
+
+=== FRONTEND ===
+frontend/src/api/risks.js
+frontend/src/components/common/RiskBadge.jsx
+frontend/src/components/risk/RiskTable.jsx
+frontend/src/hooks/useRiskAnalysis.js
+frontend/src/hooks/useRisks.js
+frontend/src/hooks/useRisks.js.backup-before-incidents-crud
+frontend/src/styles.css.backup-before-risk-filters
+frontend/src/views/RiskRegisterView.jsx
+frontend/src/views/RiskRegisterView.jsx.backup-before-filter-colors
+
+=== SQLITE ===
+6
+
+============================================================
+ FIN RF-01
+============================================================
+
+EVIDENCIA:
+/home/thewinnertakeall/projects/riskguard/evidence/RF-01/audit_20260905_234301.txt
+
+IMPORTANTE: este script NO modifica codigo.
+

@@ -1,0 +1,53 @@
+from pathlib import Path
+import json
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+CONTROLS_FILE = BASE_DIR / "data" / "controls.json"
+
+
+def load_controls():
+    with open(CONTROLS_FILE, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def calculate_compliance():
+    controls = load_controls()
+
+    applicable = [
+        control for control in controls
+        if control.get("applicable", True)
+    ]
+
+    total = len(applicable)
+
+    implemented = sum(
+        1 for c in applicable
+        if c.get("status") == "implemented"
+    )
+
+    partial = sum(
+        1 for c in applicable
+        if c.get("status") == "partial"
+    )
+
+    pending = total - implemented - partial
+
+    percentage = (
+        round((implemented + partial * 0.5) / total * 100, 2)
+        if total
+        else 0
+    )
+
+    return {
+        "standard": "ISO/IEC 27001:2022",
+        "total_controls": total,
+        "implemented": implemented,
+        "partial": partial,
+        "pending": pending,
+        "compliance_percentage": percentage
+    }
+
+
+def get_controls():
+    return load_controls()

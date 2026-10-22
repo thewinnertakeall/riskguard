@@ -1,0 +1,173 @@
+@prefix rg: <http://riskguard.org/ontology#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://riskguard.org/ontology#incident/INC-002> a rg:Incident ;
+    rg:code "INC-002" ;
+    rg:description "Se detectó deterioro en el aislamiento durante inspección." ;
+    rg:incidentDate "2026-09-05"^^xsd:date ;
+    rg:incidentType "Electrical Failure" ;
+    rg:locatedIn <http://riskguard.org/ontology#location/LOC-PLANT-01> ;
+    rg:severity "High" ;
+    rg:status "Open" ;
+    rg:title "Fallo de aislamiento eléctrico" .
+
+<http://riskguard.org/ontology#incident/INC-003> a rg:Incident ;
+    rg:code "INC-003" ;
+    rg:description "Estamos probando fallo CRUP POR FRONTEND" ;
+    rg:incidentDate "1997-11-01"^^xsd:date ;
+    rg:incidentType "Accidente fatal" ;
+    rg:severity "Low" ;
+    rg:status "In Progress" ;
+    rg:title "Fallo del CRUD" .
+
+<http://riskguard.org/ontology#process/PROC-MAINT-TEST> a rg:Process ;
+    rg:code "PROC-MAINT-TEST" ;
+    rg:description "Maintenance process" ;
+    rg:name "Maintenance" .
+
+<http://riskguard.org/ontology#risk/RISK-001> a rg:Risk ;
+    rg:belongsToArea <http://riskguard.org/ontology#area/AREA-IND> ;
+    rg:belongsToProcess <http://riskguard.org/ontology#process/PROC-MAINT> ;
+    rg:category "Technological" ;
+    rg:code "RISK-001" ;
+    rg:description "Acceso no autorizado, malware o explotación de vulnerabilidades que comprometan la confidencialidad, integridad o disponibilidad de los sistemas de información." ;
+    rg:hasCause <http://riskguard.org/ontology#cause/CAUSE-001> ;
+    rg:hasControl <http://riskguard.org/ontology#control/CTRL-001> ;
+    rg:hasIncident <http://riskguard.org/ontology#incident/INC-001> ;
+    rg:impact 5 ;
+    rg:locatedIn <http://riskguard.org/ontology#location/LOC-PLANT-01> ;
+    rg:name "Ataque cibernético a los sistemas de información" ;
+    rg:probability 4 ;
+    rg:riskLevel "Critical" ;
+    rg:riskScore 20 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#risk/T-NAT-001> a rg:Risk ;
+    rg:category "Natural" ;
+    rg:code "T-NAT-001" ;
+    rg:description "Acumulación o desbordamiento de agua que afecte instalaciones, equipos, personas o vías de acceso." ;
+    rg:impact 5 ;
+    rg:name "Inundaciones por lluvias intensas" ;
+    rg:probability 4 ;
+    rg:riskLevel "Critical" ;
+    rg:riskScore 20 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#risk/T-NAT-002> a rg:Risk ;
+    rg:category "Natural" ;
+    rg:code "T-NAT-002" ;
+    rg:description "Movimiento sísmico que pueda causar lesiones, daños estructurales o interrupciones operativas." ;
+    rg:impact 5 ;
+    rg:name "Sismos y daños estructurales" ;
+    rg:probability 2 ;
+    rg:riskLevel "High" ;
+    rg:riskScore 10 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#risk/T-NAT-003> a rg:Risk ;
+    rg:category "Natural" ;
+    rg:code "T-NAT-003" ;
+    rg:description "Movimiento de tierra o material en laderas que pueda afectar personas, infraestructura y accesos." ;
+    rg:impact 5 ;
+    rg:name "Deslizamientos de tierra" ;
+    rg:probability 3 ;
+    rg:riskLevel "High" ;
+    rg:riskScore 15 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#risk/T-SOC-001> a rg:Risk ;
+    rg:category "Social" ;
+    rg:code "T-SOC-001" ;
+    rg:description "Conflictos entre personas o grupos que afecten la seguridad, la convivencia o la continuidad de las actividades." ;
+    rg:impact 4 ;
+    rg:name "Conflictos laborales y alteraciones del orden" ;
+    rg:probability 3 ;
+    rg:riskLevel "High" ;
+    rg:riskScore 12 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#risk/T-SOC-002> a rg:Risk ;
+    rg:category "Social" ;
+    rg:code "T-SOC-002" ;
+    rg:description "Errores operativos derivados de fatiga, desconocimiento de procedimientos o capacitación insuficiente." ;
+    rg:impact 3 ;
+    rg:name "Error humano por fatiga o falta de capacitación" ;
+    rg:probability 4 ;
+    rg:riskLevel "High" ;
+    rg:riskScore 12 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#risk/T-SOC-003> a rg:Risk ;
+    rg:category "Social" ;
+    rg:code "T-SOC-003" ;
+    rg:description "Acciones intencionales que provoquen pérdidas, daños físicos o interrupciones en las instalaciones." ;
+    rg:impact 4 ;
+    rg:name "Hurto, vandalismo o sabotaje de instalaciones" ;
+    rg:probability 3 ;
+    rg:riskLevel "High" ;
+    rg:riskScore 12 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#risk/T-TEC-002> a rg:Risk ;
+    rg:category "Technological" ;
+    rg:code "T-TEC-002" ;
+    rg:description "Interrupción de servidores, redes o servicios tecnológicos que impida operar los sistemas." ;
+    rg:impact 4 ;
+    rg:name "Falla de servidores y pérdida de disponibilidad" ;
+    rg:probability 4 ;
+    rg:riskLevel "High" ;
+    rg:riskScore 16 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#risk/T-TEC-003> a rg:Risk ;
+    rg:category "Technological" ;
+    rg:code "T-TEC-003" ;
+    rg:description "Eliminación accidental, corrupción, alteración o pérdida de información necesaria para la operación." ;
+    rg:impact 5 ;
+    rg:name "Pérdida o corrupción de datos críticos" ;
+    rg:probability 3 ;
+    rg:riskLevel "High" ;
+    rg:riskScore 15 ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#area/AREA-IND> a rg:Area ;
+    rg:code "AREA-IND" ;
+    rg:description "Area where industrial maintenance activities are performed." ;
+    rg:name "Industrial Maintenance Area" .
+
+<http://riskguard.org/ontology#cause/CAUSE-001> a rg:Cause ;
+    rg:causeType "Unsafe Condition" ;
+    rg:code "CAUSE-001" ;
+    rg:description "Equipment is not completely isolated before maintenance." ;
+    rg:name "Inadequate electrical isolation" ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#control/CTRL-001> a rg:Control ;
+    rg:code "CTRL-001" ;
+    rg:controlType "Administrative" ;
+    rg:description "Procedure to isolate and lock electrical energy sources." ;
+    rg:effectiveness 9e+01 ;
+    rg:hierarchyLevel "Administrative Control" ;
+    rg:name "Lockout Tagout Procedure" ;
+    rg:status "Active" .
+
+<http://riskguard.org/ontology#incident/INC-001> a rg:Incident ;
+    rg:code "INC-001" ;
+    rg:description "Worker experienced an electrical shock while performing maintenance." ;
+    rg:incidentDate "2026-09-03"^^xsd:date ;
+    rg:incidentType "Accident" ;
+    rg:locatedIn <http://riskguard.org/ontology#location/LOC-PLANT-01> ;
+    rg:severity "High" ;
+    rg:status "Open" ;
+    rg:title "Electrical shock during maintenance" .
+
+<http://riskguard.org/ontology#process/PROC-MAINT> a rg:Process ;
+    rg:code "PROC-MAINT" ;
+    rg:description "Preventive and corrective maintenance activities." ;
+    rg:name "Equipment Maintenance" .
+
+<http://riskguard.org/ontology#location/LOC-PLANT-01> a rg:Location ;
+    rg:code "LOC-PLANT-01" ;
+    rg:description "Main industrial production facility." ;
+    rg:name "Main Production Plant" .
+

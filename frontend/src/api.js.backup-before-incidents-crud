@@ -1,0 +1,197 @@
+const API_BASE = "";
+
+async function request(url, options = {}) {
+  const response = await fetch(`${API_BASE}${url}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    },
+    ...options
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+
+    throw new Error(
+      `API ${response.status}: ${text || response.statusText}`
+    );
+  }
+
+  return response.json();
+}
+
+export async function getRisks() {
+  return request("/api/risks");
+}
+
+export async function getRiskDashboard() {
+  return request("/api/v2/risks");
+}
+
+export async function analyzeRisk(riskCode) {
+  return request(
+    `/api/agents/analyze/${encodeURIComponent(riskCode)}`
+  );
+}
+
+export async function getRecommendation(riskCode) {
+  return request(
+    `/api/agents/recommend/${encodeURIComponent(riskCode)}`
+  );
+}
+
+export async function getSemanticStatus() {
+  return request("/api/semantic/status");
+}
+
+export async function synchronizeSemanticGraph() {
+  return request("/api/semantic/sync", {
+    method: "POST"
+  });
+}
+
+export async function getIncidents() {
+  return request("/api/incidents");
+}
+
+export async function getISO27001Status() {
+  return request("/api/iso27001/status");
+}
+
+export async function getISO27001Controls() {
+  return request("/api/iso27001/controls");
+}
+
+export async function getISO27001Compliance() {
+  return request("/api/iso27001/compliance");
+}
+
+export async function getISO27001SoA() {
+  return request("/api/iso27001/soa");
+}
+
+
+export async function updateISO27001Control(code, data) {
+  return request(
+    `/api/iso27001/controls/${encodeURIComponent(code)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(data)
+    }
+  );
+}
+
+
+export async function getRiskISOControls(riskCode) {
+  return request(
+    `/api/v2/risks/${encodeURIComponent(riskCode)}/iso-controls`
+  );
+}
+
+export async function createRiskISOControl(riskCode, data) {
+  return request(
+    `/api/v2/risks/${encodeURIComponent(riskCode)}/iso-controls`,
+    {
+      method: "POST",
+      body: JSON.stringify(data)
+    }
+  );
+}
+
+export async function updateRiskISOControl(riskCode, isoControlCode, data) {
+  return request(`/api/v2/risks/${encodeURIComponent(riskCode)}/iso-controls/${encodeURIComponent(isoControlCode)}`, {
+    method: "PUT",
+    body: JSON.stringify(data)
+  });
+}
+
+export async function deleteRiskISOControl(riskCode, isoControlCode) {
+  return request(
+    `/api/v2/risks/${encodeURIComponent(riskCode)}/iso-controls/${encodeURIComponent(isoControlCode)}`,
+    {
+      method: "DELETE"
+    }
+  );
+}
+
+// ============================================================
+// EVIDENCE
+// ============================================================
+
+export async function getEvidence(params = {}) {
+  const query = new URLSearchParams();
+
+  if (params.status) {
+    query.set("status", params.status);
+  }
+
+  if (params.risk_id !== undefined && params.risk_id !== null) {
+    query.set("risk_id", params.risk_id);
+  }
+
+  if (
+    params.iso_control_id !== undefined &&
+    params.iso_control_id !== null
+  ) {
+    query.set("iso_control_id", params.iso_control_id);
+  }
+
+  const queryString = query.toString();
+
+  return request(
+    `/api/v2/evidence${queryString ? `?${queryString}` : ""}`
+  );
+}
+
+export async function getEvidenceByCode(code) {
+  return request(
+    `/api/v2/evidence/${encodeURIComponent(code)}`
+  );
+}
+
+export async function createEvidence(data) {
+  return request("/api/v2/evidence", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+export async function updateEvidence(code, data) {
+  return request(
+    `/api/v2/evidence/${encodeURIComponent(code)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(data)
+    }
+  );
+}
+
+export async function deleteEvidence(code) {
+  return request(
+    `/api/v2/evidence/${encodeURIComponent(code)}`,
+    {
+      method: "DELETE"
+    }
+  );
+}
+
+
+export async function createRisk(data) {
+  return request("/api/risks", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+export async function updateRisk(id, data) {
+  return request(`/api/risks/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify(data)
+  });
+}
+
+export async function deleteRisk(id) {
+  return request(`/api/risks/${encodeURIComponent(id)}`, {
+    method: "DELETE"
+  });
+}

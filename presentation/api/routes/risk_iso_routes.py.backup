@@ -1,0 +1,157 @@
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+
+from application.use_cases.get_risk_iso_controls import (
+    GetRiskISOControlsUseCase
+)
+
+from application.use_cases.create_risk_iso_control import (
+    CreateRiskISOControlUseCase
+)
+
+from application.use_cases.delete_risk_iso_control import (
+    DeleteRiskISOControlUseCase
+)
+
+
+router = APIRouter(
+    prefix="/api/v2/risks",
+    tags=["Risk ↔ ISO 27001"]
+)
+
+
+class RiskISOControlCreate(BaseModel):
+    iso_control_code: str
+    treatment_status: str = "Planned"
+    notes: str | None = None
+
+
+@router.get("/{code}/iso-controls")
+def get_risk_iso_controls(
+    code: str,
+    db: Session = Depends(get_db),
+):
+    use_case = GetRiskISOControlsUseCase()
+
+    risk, links = use_case.execute(
+        db,
+        code
+    )
+
+    if risk is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Risk {code} not found"
+        )
+
+    return {
+        "risk_code": risk.code,
+        "risk_name": risk.name,
+        "iso_controls": [
+            {
+                "id": link.id,
+                "code": link.iso_control.code,
+                "name": link.iso_control.name,
+                "treatment_status": link.treatment_status,
+                "notes": link.notes,
+                "created_at": link.created_at,
+            }
+            for link in links
+        ]
+    }
+
+
+@router.post("/{code}/iso-controls")
+def create_risk_iso_control(
+    code: str,
+    data: RiskISOControlCreate,
+    db: Session = Depends(get_db),
+):
+    use_case = CreateRiskISOControlUseCase()
+
+    link, status = use_case.execute(
+        db=db,
+        risk_code=code,
+        iso_control_code=data.iso_control_code,
+        treatment_status=data.treatment_status,
+        notes=data.notes,
+    )
+
+    if status == "risk_not_found":
+        raise HTTPException(
+            status_code=404,
+            detail=f"Risk {code} not found"
+        )
+
+    if status == "iso_control_not_found":
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"ISO control "
+                f"{data.iso_control_code} not found"
+            )
+        )
+
+    if status == "already_exists":
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Risk {code} is already linked "
+                f"to ISO control {data.iso_control_code}"
+            )
+        )
+
+    return {
+        "message": "Risk ↔ ISO control link created",
+        "id": link.id,
+        "risk_code": code,
+        "iso_control_code": data.iso_control_code,
+        "treatment_status": link.treatment_status,
+        "notes": link.notes,
+    }
+
+
+@router.delete("/{code}/iso-controls/{iso_control_code}")
+def delete_risk_iso_control(
+    code: str,
+    iso_control_code: str,
+    db: Session = Depends(get_db),
+):
+    use_case = DeleteRiskISOControlUseCase()
+
+    link, status = use_case.execute(
+        db=db,
+        risk_code=code,
+        iso_control_code=iso_control_code,
+    )
+
+    if status == "risk_not_found":
+        raise HTTPException(
+            status_code=404,
+            detail=f"Risk {code} not found"
+        )
+
+    if status == "iso_control_not_found":
+        raise HTTPException(
+            status_code=404,
+            detail=f"ISO control {iso_control_code} not found"
+        )
+
+    if status == "link_not_found":
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Risk {code} is not linked "
+                f"to ISO control {iso_control_code}"
+            )
+        )
+
+    return {
+        "message": "Risk ↔ ISO control link deleted",
+        "risk_code": code,
+        "iso_control_code": iso_control_code,
+    }

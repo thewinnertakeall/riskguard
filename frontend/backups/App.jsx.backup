@@ -1,0 +1,787 @@
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  analyzeRisk,
+  getIncidents,
+  getRisks,
+  getSemanticStatus,
+  synchronizeSemanticGraph
+} from "./api";
+
+function App() {
+  const [risks, setRisks] = useState([]);
+  const [incidents, setIncidents] = useState([]);
+  const [semantic, setSemantic] = useState(null);
+
+  const [selectedRisk, setSelectedRisk] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+
+  const [error, setError] = useState("");
+
+  async function loadDashboard() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [
+        riskData,
+        incidentData,
+        semanticData
+      ] = await Promise.all([
+        getRisks(),
+        getIncidents(),
+        getSemanticStatus()
+      ]);
+
+      setRisks(Array.isArray(riskData) ? riskData : []);
+      setIncidents(Array.isArray(incidentData) ? incidentData : []);
+      setSemantic(semanticData);
+
+      if (!selectedRisk && riskData.length > 0) {
+        setSelectedRisk(riskData[0]);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleAnalyze(risk) {
+    try {
+      setSelectedRisk(risk);
+      setAnalysisLoading(true);
+      setError("");
+
+      const result = await analyzeRisk(risk.code);
+
+      setAnalysis(result);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+      setAnalysis(null);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  }
+
+  async function handleSemanticSync() {
+    try {
+      setSyncLoading(true);
+      setError("");
+
+      await synchronizeSemanticGraph();
+
+      const status = await getSemanticStatus();
+
+      setSemantic(status);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setSyncLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const statistics = useMemo(() => {
+    const total = risks.length;
+
+    const critical = risks.filter(
+      (risk) => risk.risk_level === "Critical"
+    ).length;
+
+    const high = risks.filter(
+      (risk) => risk.risk_level === "High"
+    ).length;
+
+    const medium = risks.filter(
+      (risk) => risk.risk_level === "Medium"
+    ).length;
+
+    const low = risks.filter(
+      (risk) => risk.risk_level === "Low"
+    ).length;
+
+    const openIncidents = incidents.filter(
+      (incident) =>
+        String(incident.status || "").toLowerCase() === "open"
+    ).length;
+
+    return {
+      total,
+      critical,
+      high,
+      medium,
+      low,
+      incidents: incidents.length,
+      openIncidents
+    };
+  }, [risks, incidents]);
+
+  return (
+    <div className="app-shell">
+
+      <aside className="sidebar">
+
+        <div className="brand">
+          <div className="brand-mark">R</div>
+
+          <div>
+            <div className="brand-name">RiskGuard</div>
+            <div className="brand-subtitle">Safety Intelligence</div>
+          </div>
+        </div>
+
+        <nav className="navigation">
+
+          <button className="nav-item active">
+            <span>▦</span>
+            Dashboard
+          </button>
+
+          <button className="nav-item">
+            <span>⚠</span>
+            Risk Register
+          </button>
+
+          <button className="nav-item">
+            <span>◉</span>
+            Incidents
+          </button>
+
+          <button className="nav-item">
+            <span>◆</span>
+            Controls
+          </button>
+
+          <button className="nav-item">
+            <span>◈</span>
+            Knowledge Graph
+          </button>
+
+          <button className="nav-item">
+            <span>◎</span>
+            Multi-Agent
+          </button>
+
+        </nav>
+
+        <div className="architecture-box">
+
+          <div className="architecture-title">
+            Intelligent Architecture
+          </div>
+
+          <div className="architecture-flow">
+            <span>SQL</span>
+            <b>→</b>
+            <span>RDF</span>
+            <b>→</b>
+            <span>OWL</span>
+          </div>
+
+          <div className="architecture-flow">
+            <span>SPARQL</span>
+            <b>→</b>
+            <span>Agents</span>
+          </div>
+
+        </div>
+
+      </aside>
+
+      <main className="main-content">
+
+        <header className="topbar">
+
+          <div>
+            <div className="eyebrow">
+              OCCUPATIONAL RISK MANAGEMENT
+            </div>
+
+            <h1>Risk Intelligence Dashboard</h1>
+
+            <p>
+              Semantic and multi-agent analysis of occupational risks.
+            </p>
+          </div>
+
+          <div className="topbar-actions">
+
+            <button
+              className="secondary-button"
+              onClick={loadDashboard}
+              disabled={loading}
+            >
+              ↻ Refresh
+            </button>
+
+          </div>
+
+        </header>
+
+        {error && (
+          <div className="error-banner">
+            <strong>Connection error:</strong> {error}
+          </div>
+        )}
+
+        <section className="stats-grid">
+
+          <StatCard
+            title="Total Risks"
+            value={statistics.total}
+            icon="◈"
+            description="Registered risks"
+          />
+
+          <StatCard
+            title="Critical"
+            value={statistics.critical}
+            icon="!"
+            variant="critical"
+            description="Immediate attention"
+          />
+
+          <StatCard
+            title="High"
+            value={statistics.high}
+            icon="▲"
+            variant="high"
+            description="Requires control"
+          />
+
+          <StatCard
+            title="Incidents"
+            value={statistics.incidents}
+            icon="●"
+            variant="incident"
+            description={`${statistics.openIncidents} open`}
+          />
+
+        </section>
+
+        <section className="content-grid">
+
+          <div className="panel risk-panel">
+
+            <div className="panel-header">
+
+              <div>
+                <h2>Risk Register</h2>
+                <p>Current occupational risk inventory</p>
+              </div>
+
+              <span className="count-badge">
+                {risks.length} risks
+              </span>
+
+            </div>
+
+            {loading ? (
+              <div className="loading-state">
+                Loading risks...
+              </div>
+            ) : risks.length === 0 ? (
+              <div className="empty-state">
+                No risks registered.
+              </div>
+            ) : (
+              <div className="risk-table-wrapper">
+
+                <table className="risk-table">
+
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Risk</th>
+                      <th>Category</th>
+                      <th>Score</th>
+                      <th>Level</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+
+                    {risks.map((risk) => (
+
+                      <tr
+                        key={risk.id || risk.code}
+                        className={
+                          selectedRisk?.code === risk.code
+                            ? "selected-row"
+                            : ""
+                        }
+                      >
+
+                        <td>
+                          <strong>{risk.code}</strong>
+                        </td>
+
+                        <td>
+                          <div className="risk-name">
+                            {risk.name}
+                          </div>
+
+                          {risk.description && (
+                            <div className="risk-description">
+                              {risk.description}
+                            </div>
+                          )}
+                        </td>
+
+                        <td>
+                          {risk.category || "—"}
+                        </td>
+
+                        <td>
+                          <strong>{risk.risk_score}</strong>
+                        </td>
+
+                        <td>
+                          <RiskBadge level={risk.risk_level} />
+                        </td>
+
+                        <td>
+                          <span className="status-dot">
+                            {risk.status || "Unknown"}
+                          </span>
+                        </td>
+
+                        <td>
+                          <button
+                            className="analyze-button"
+                            onClick={() => handleAnalyze(risk)}
+                          >
+                            Analyze
+                          </button>
+                        </td>
+
+                      </tr>
+
+                    ))}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+            )}
+
+          </div>
+
+          <div className="panel intelligence-panel">
+
+            <div className="panel-header">
+
+              <div>
+                <h2>Selected Risk</h2>
+                <p>Multi-agent intelligence</p>
+              </div>
+
+              {selectedRisk && (
+                <RiskBadge level={selectedRisk.risk_level} />
+              )}
+
+            </div>
+
+            {!selectedRisk ? (
+              <div className="empty-state">
+                Select a risk to begin analysis.
+              </div>
+            ) : (
+
+              <div className="selected-risk">
+
+                <div className="selected-risk-header">
+
+                  <div>
+
+                    <span className="risk-code">
+                      {selectedRisk.code}
+                    </span>
+
+                    <h3>{selectedRisk.name}</h3>
+
+                  </div>
+
+                  <div className="score-display">
+
+                    <span>Risk Score</span>
+
+                    <strong>
+                      {selectedRisk.risk_score}
+                    </strong>
+
+                    <small>/ 25</small>
+
+                  </div>
+
+                </div>
+
+                <div className="risk-metrics">
+
+                  <Metric
+                    label="Probability"
+                    value={`${selectedRisk.probability}/5`}
+                  />
+
+                  <Metric
+                    label="Impact"
+                    value={`${selectedRisk.impact}/5`}
+                  />
+
+                  <Metric
+                    label="Category"
+                    value={selectedRisk.category || "—"}
+                  />
+
+                </div>
+
+                <button
+                  className="primary-button full-width"
+                  onClick={() => handleAnalyze(selectedRisk)}
+                  disabled={analysisLoading}
+                >
+                  {analysisLoading
+                    ? "Running agents..."
+                    : "Run Multi-Agent Analysis"}
+                </button>
+
+                {analysis && (
+                  <AgentResults analysis={analysis} />
+                )}
+
+              </div>
+
+            )}
+
+          </div>
+
+        </section>
+
+        <section className="bottom-grid">
+
+          <div className="panel semantic-panel">
+
+            <div className="panel-header">
+
+              <div>
+                <h2>Knowledge Graph</h2>
+                <p>RDF / OWL semantic layer</p>
+              </div>
+
+              <span
+                className={
+                  semantic?.success
+                    ? "connection-status online"
+                    : "connection-status offline"
+                }
+              >
+                <span className="status-circle"></span>
+                {semantic?.success ? "Available" : "Unavailable"}
+              </span>
+
+            </div>
+
+            <div className="semantic-content">
+
+              <div className="semantic-stat">
+
+                <span className="semantic-label">
+                  RDF file
+                </span>
+
+                <strong>
+                  {semantic?.rdf_file || "—"}
+                </strong>
+
+              </div>
+
+              <div className="semantic-stat">
+
+                <span className="semantic-label">
+                  Triples
+                </span>
+
+                <strong>
+                  {semantic?.triples ?? 0}
+                </strong>
+
+              </div>
+
+              <div className="semantic-actions">
+
+                <button
+                  className="primary-button"
+                  onClick={handleSemanticSync}
+                  disabled={syncLoading}
+                >
+                  {syncLoading
+                    ? "Synchronizing..."
+                    : "Synchronize SQL → RDF"}
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="panel architecture-panel">
+
+            <div className="panel-header">
+
+              <div>
+                <h2>System Status</h2>
+                <p>RiskGuard components</p>
+              </div>
+
+            </div>
+
+            <div className="system-list">
+
+              <SystemStatus
+                name="FastAPI"
+                status="Operational"
+              />
+
+              <SystemStatus
+                name="SQLite"
+                status="Operational"
+              />
+
+              <SystemStatus
+                name="RDF / OWL"
+                status={
+                  semantic?.success
+                    ? "Operational"
+                    : "Unavailable"
+                }
+              />
+
+              <SystemStatus
+                name="Multi-Agent System"
+                status="Operational"
+              />
+
+              <SystemStatus
+                name="SPARQL"
+                status="Operational"
+              />
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <footer className="footer">
+
+          <span>
+            RiskGuard v1.1.0
+          </span>
+
+          <span>
+            SQL · RDF · OWL · SPARQL · Reasoning · Multi-Agent
+          </span>
+
+        </footer>
+
+      </main>
+
+    </div>
+  );
+}
+
+function StatCard({
+  title,
+  value,
+  icon,
+  description,
+  variant = ""
+}) {
+  return (
+    <div className={`stat-card ${variant}`}>
+
+      <div className="stat-icon">
+        {icon}
+      </div>
+
+      <div className="stat-content">
+
+        <span>{title}</span>
+
+        <strong>{value}</strong>
+
+        <small>{description}</small>
+
+      </div>
+
+    </div>
+  );
+}
+
+function RiskBadge({ level }) {
+  const normalized = String(level || "Unknown").toLowerCase();
+
+  return (
+    <span className={`risk-badge ${normalized}`}>
+      {level || "Unknown"}
+    </span>
+  );
+}
+
+function Metric({ label, value }) {
+  return (
+    <div className="metric">
+
+      <span>{label}</span>
+
+      <strong>{value}</strong>
+
+    </div>
+  );
+}
+
+function AgentResults({ analysis }) {
+  const riskAnalysis = analysis?.risk_analysis || {};
+  const controlAnalysis = analysis?.control_analysis || {};
+  const incidentAnalysis = analysis?.incident_analysis || {};
+  const recommendation = analysis?.recommendation || {};
+
+  const risk = riskAnalysis.risk || {};
+
+  return (
+    <div className="agent-results">
+
+      <div className="agent-title">
+        <span className="agent-pulse"></span>
+        Multi-Agent Analysis
+      </div>
+
+      <div className="agent-grid">
+
+        <AgentCard
+          name="Risk Analysis Agent"
+          value={
+            risk.risk_level ||
+            riskAnalysis.risk_level ||
+            riskAnalysis.level ||
+            "Analyzed"
+          }
+        />
+
+        <AgentCard
+          name="Control Analysis Agent"
+          value={
+            controlAnalysis.control_status ||
+            "Analyzed"
+          }
+        />
+
+        <AgentCard
+          name="Incident Analysis Agent"
+          value={
+            incidentAnalysis.incident_status ||
+            "Analyzed"
+          }
+        />
+
+        <AgentCard
+          name="Recommendation Agent"
+          value={
+            recommendation.priority ||
+            recommendation.recommendation_level ||
+            "Generated"
+          }
+        />
+
+      </div>
+
+      {Array.isArray(recommendation.recommendations) &&
+        recommendation.recommendations.length > 0 && (
+
+          <div className="recommendations">
+
+            <div className="recommendation-title">
+              Recommended Actions
+            </div>
+
+            <ol>
+
+              {recommendation.recommendations.map(
+                (item, index) => (
+                  <li key={index}>{item}</li>
+                )
+              )}
+
+            </ol>
+
+          </div>
+
+        )}
+
+    </div>
+  );
+}
+
+function AgentCard({ name, value }) {
+  return (
+    <div className="agent-card">
+
+      <span>{name}</span>
+
+      <strong>{value}</strong>
+
+    </div>
+  );
+}
+
+function SystemStatus({ name, status }) {
+  const operational =
+    status === "Operational";
+
+  return (
+    <div className="system-item">
+
+      <div className="system-name">
+
+        <span
+          className={
+            operational
+              ? "status-circle"
+              : "status-circle offline"
+          }
+        ></span>
+
+        {name}
+
+      </div>
+
+      <span
+        className={
+          operational
+            ? "system-status operational"
+            : "system-status"
+        }
+      >
+        {status}
+      </span>
+
+    </div>
+  );
+}
+
+export default App;

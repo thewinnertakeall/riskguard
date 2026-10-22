@@ -255,6 +255,7 @@ function App() {
             syncLoading={syncLoading}
             handleAnalyze={handleAnalyze}
             handleSemanticSync={handleSemanticSync}
+            isoCompliance={isoComplianceFromHook}
           />
         )}
         

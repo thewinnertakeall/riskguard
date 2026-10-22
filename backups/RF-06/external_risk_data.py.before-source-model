@@ -1,0 +1,86 @@
+from sqlalchemy import Column, DateTime, Float, Integer, String
+from sqlalchemy.sql import func
+
+from app.database import Base
+
+
+class ExternalRiskData(Base):
+    __tablename__ = "external_risk_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    source = Column(
+        String(150),
+        nullable=False
+    )
+
+    source_url = Column(
+        String(500),
+        nullable=False
+    )
+
+    year = Column(
+        Integer,
+        nullable=False
+    )
+
+    month = Column(
+        Integer,
+        nullable=True
+    )
+
+    department = Column(
+        String(150),
+        nullable=True
+    )
+
+    economic_activity = Column(
+        String(255),
+        nullable=True
+    )
+
+    affiliated_workers = Column(
+        Integer,
+        nullable=True
+    )
+
+    affiliated_companies = Column(
+        Integer,
+        nullable=True
+    )
+
+    reported_accidents = Column(
+        Integer,
+        nullable=True
+    )
+
+    qualified_accidents = Column(
+        Integer,
+        nullable=True
+    )
+
+    reported_occupational_diseases = Column(
+        Integer,
+        nullable=True
+    )
+
+    qualified_occupational_diseases = Column(
+        Integer,
+        nullable=True
+    )
+
+    reported_work_deaths = Column(
+        Integer,
+        nullable=True
+    )
+
+    qualified_work_deaths = Column(
+        Integer,
+        nullable=True
+    )
+
+    imported_at = Column(
+        DateTime,
+        server_default=func.current_timestamp(),
+        nullable=False
+    )

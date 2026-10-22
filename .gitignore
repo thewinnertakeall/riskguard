@@ -1,57 +1,6 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-.pytest_cache/
-.coverage
-htmlcov/
-.venv/
 venv/
-
-# Environment / secrets
+__pycache__/
+*.pyc
 .env
-.env.*
-!.env.example
-
-# Databases / runtime data
-*.db
-*.sqlite
-*.sqlite3
-data/*.db
-data/*.sqlite
-data/*.sqlite3
-
-# RDF generated/runtime files
-data/*.ttl
-
-# Logs
-*.log
-logs/
-
-# Frontend
-frontend/node_modules/
-frontend/dist/
-
-# IDE
-.vscode/
-.idea/
-
-# OS
 .DS_Store
-Thumbs.db
-
-# Temporary / backups
-*.tmp
-*.swp
-backup_*/
-
-# Historical project backups
-backups/
-
-# Evidence/runtime exports that may contain generated or local data
-/evidence/
-
-# Historical source copies / snapshots
-*.backup*
-*.before-*
-*.bak*
+*.db

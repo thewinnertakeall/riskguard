@@ -1,0 +1,511 @@
+import { useEffect, useMemo, useState } from "react";
+
+import DashboardView from "./views/DashboardView";
+import RiskRegisterView from "./views/RiskRegisterView";
+import IncidentsView from "./views/IncidentsView";
+import ControlsView from "./views/ControlsView";
+import ISO27001View from "./views/ISO27001View";
+import KnowledgeView from "./views/KnowledgeView";
+import MultiAgentView from "./views/MultiAgentView";
+
+import {
+  analyzeRisk,
+  getIncidents,
+  getRisks,
+  getSemanticStatus,
+  synchronizeSemanticGraph,
+  getISO27001Status,
+  getISO27001Controls,
+  getISO27001Compliance,
+  getISO27001SoA,
+  updateISO27001Control,
+  getRiskISOControls,
+  createRiskISOControl,
+  deleteRiskISOControl
+} from "./api";
+
+function App() {
+  const [activeSection, setActiveSection] = useState("dashboard");
+
+  const [risks, setRisks] = useState([]);
+  const [incidents, setIncidents] = useState([]);
+  const [semantic, setSemantic] = useState(null);
+
+  const [isoStatus, setIsoStatus] = useState(null);
+  const [isoControls, setIsoControls] = useState([]);
+  const [isoCompliance, setIsoCompliance] = useState(null);
+  const [isoSoA, setIsoSoA] = useState(null);
+  const [isoLoading, setIsoLoading] = useState(false);
+  const [isoSaving, setIsoSaving] = useState(null);
+
+  const [riskISOControls, setRiskISOControls] = useState([]);
+  const [riskISOLoading, setRiskISOLoading] = useState(false);
+  const [riskISOSaving, setRiskISOSaving] = useState(false);
+
+  const [selectedRisk, setSelectedRisk] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+
+  const [error, setError] = useState("");
+
+  async function loadDashboard() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [riskData, incidentData, semanticData] = await Promise.all([
+        getRisks(),
+        getIncidents(),
+        getSemanticStatus()
+      ]);
+
+      const safeRisks = Array.isArray(riskData) ? riskData : [];
+      const safeIncidents = Array.isArray(incidentData)
+        ? incidentData
+        : [];
+
+      setRisks(safeRisks);
+      setIncidents(safeIncidents);
+      setSemantic(semanticData);
+
+      if (!selectedRisk && safeRisks.length > 0) {
+        setSelectedRisk(safeRisks[0]);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadISO27001() {
+    try {
+      setIsoLoading(true);
+
+      const [
+        statusData,
+        controlsData,
+        complianceData,
+        soaData
+      ] = await Promise.all([
+        getISO27001Status(),
+        getISO27001Controls(),
+        getISO27001Compliance(),
+        getISO27001SoA()
+      ]);
+
+      setIsoStatus(statusData);
+      setIsoControls(
+        Array.isArray(controlsData)
+          ? controlsData
+          : []
+      );
+      setIsoCompliance(complianceData);
+      setIsoSoA(soaData);
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setIsoLoading(false);
+    }
+  }
+
+  async function saveISOControl(code, data) {
+    try {
+      setIsoSaving(code);
+      setError("");
+
+      await updateISO27001Control(code, data);
+
+      await loadISO27001();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setIsoSaving(null);
+    }
+  }
+
+  async function handleAnalyze(risk) {
+    try {
+      setSelectedRisk(risk);
+      setAnalysisLoading(true);
+      setError("");
+
+      const result = await analyzeRisk(risk.code);
+
+      setAnalysis(result);
+      setActiveSection("multiagent");
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+      setAnalysis(null);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  }
+
+  async function handleSemanticSync() {
+    try {
+      setSyncLoading(true);
+      setError("");
+
+      await synchronizeSemanticGraph();
+
+      const status = await getSemanticStatus();
+
+      setSemantic(status);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setSyncLoading(false);
+    }
+  }
+
+  async function loadRiskISOControls(risk) {
+    try {
+      setRiskISOLoading(true);
+      setError("");
+
+      const data = await getRiskISOControls(risk.code);
+
+      setRiskISOControls(
+        Array.isArray(data?.iso_controls)
+          ? data.iso_controls
+          : []
+      );
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+      setRiskISOControls([]);
+    } finally {
+      setRiskISOLoading(false);
+    }
+  }
+
+  async function handleCreateRiskISOControl(data) {
+    if (!selectedRisk?.code) {
+      setError("Debe seleccionar un riesgo.");
+      return;
+    }
+
+    try {
+      setRiskISOSaving(true);
+      setError("");
+
+      await createRiskISOControl(
+        selectedRisk.code,
+        data
+      );
+
+      await loadRiskISOControls(selectedRisk);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setRiskISOSaving(false);
+    }
+  }
+
+  async function handleDeleteRiskISOControl(isoControlCode) {
+    if (!selectedRisk?.code) {
+      setError("Debe seleccionar un riesgo.");
+      return;
+    }
+
+    try {
+      setRiskISOSaving(true);
+      setError("");
+
+      await deleteRiskISOControl(
+        selectedRisk.code,
+        isoControlCode
+      );
+
+      await loadRiskISOControls(selectedRisk);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setRiskISOSaving(false);
+    }
+  }
+
+  useEffect(() => {
+    loadDashboard();
+    loadISO27001();
+  }, []);
+  
+  useEffect(() => {
+    if (selectedRisk?.code) {
+      loadRiskISOControls(selectedRisk);
+    }
+  }, [selectedRisk?.code]);
+
+
+  const statistics = useMemo(() => {
+    const total = risks.length;
+
+    const critical = risks.filter(
+      (risk) => risk.risk_level === "Critical"
+    ).length;
+
+    const high = risks.filter(
+      (risk) => risk.risk_level === "High"
+    ).length;
+
+    const medium = risks.filter(
+      (risk) => risk.risk_level === "Medium"
+    ).length;
+
+    const low = risks.filter(
+      (risk) => risk.risk_level === "Low"
+    ).length;
+
+    const openIncidents = incidents.filter(
+      (incident) =>
+        String(incident.status || "").toLowerCase() === "open"
+    ).length;
+
+    return {
+      total,
+      critical,
+      high,
+      medium,
+      low,
+      incidents: incidents.length,
+      openIncidents
+    };
+  }, [risks, incidents]);
+
+  const navigation = [
+    { id: "dashboard", icon: "▦", label: "Dashboard" },
+    { id: "risks", icon: "⚠", label: "Risk Register" },
+    { id: "incidents", icon: "◉", label: "Incidents" },
+    { id: "controls", icon: "◆", label: "Controls" },
+    { id: "iso27001", icon: "✓", label: "ISO 27001" },
+    { id: "knowledge", icon: "◈", label: "Knowledge Graph" },
+    { id: "multiagent", icon: "◎", label: "Multi-Agent" }
+  ];
+
+  return (
+    <div className="app-shell">
+
+      <aside className="sidebar">
+
+        <div className="brand">
+          <div className="brand-mark">R</div>
+
+          <div>
+            <div className="brand-name">RiskGuard</div>
+            <div className="brand-subtitle">
+              Safety Intelligence
+            </div>
+          </div>
+        </div>
+
+        <nav className="navigation">
+
+          {navigation.map((item) => (
+            <button
+              key={item.id}
+              className={`nav-item ${
+                activeSection === item.id ? "active" : ""
+              }`}
+              onClick={() => setActiveSection(item.id)}
+            >
+              <span>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+
+        </nav>
+
+        <div className="architecture-box">
+
+          <div className="architecture-title">
+            Intelligent Architecture
+          </div>
+
+          <div className="architecture-flow">
+            <span>SQL</span>
+            <b>→</b>
+            <span>RDF</span>
+            <b>→</b>
+            <span>OWL</span>
+          </div>
+
+          <div className="architecture-flow">
+            <span>SPARQL</span>
+            <b>→</b>
+            <span>Agents</span>
+          </div>
+
+        </div>
+
+      </aside>
+
+      <main className="main-content">
+
+        <header className="topbar">
+
+          <div>
+            <div className="eyebrow">
+              OCCUPATIONAL RISK MANAGEMENT
+            </div>
+
+            <h1>
+              {activeSection === "dashboard" &&
+                "Risk Intelligence Dashboard"}
+
+              {activeSection === "risks" &&
+                "Risk Register"}
+
+              {activeSection === "incidents" &&
+                "Incident Management"}
+
+              {activeSection === "controls" &&
+                "Risk Controls"}
+
+              {activeSection === "iso27001" &&
+                "ISO/IEC 27001:2022"}
+
+              {activeSection === "knowledge" &&
+                "Knowledge Graph"}
+
+              {activeSection === "multiagent" &&
+                "Multi-Agent Intelligence"}
+            </h1>
+
+            <p>
+              Semantic and multi-agent analysis of occupational risks.
+            </p>
+          </div>
+
+          <div className="topbar-actions">
+
+            <button
+              className="secondary-button"
+              onClick={loadDashboard}
+              disabled={loading}
+            >
+              ↻ Refresh
+            </button>
+
+          </div>
+
+        </header>
+
+        {error && (
+          <div className="error-banner">
+            <strong>Connection error:</strong> {error}
+          </div>
+        )}
+
+        {activeSection === "dashboard" && (
+          <DashboardView
+            risks={risks}
+            incidents={incidents}
+            semantic={semantic}
+            statistics={statistics}
+            selectedRisk={selectedRisk}
+            analysis={analysis}
+            loading={loading}
+            analysisLoading={analysisLoading}
+            syncLoading={syncLoading}
+            handleAnalyze={handleAnalyze}
+            handleSemanticSync={handleSemanticSync}
+          />
+        )}
+
+        {activeSection === "risks" && (
+          <RiskRegisterView
+            risks={risks}
+            loading={loading}
+            selectedRisk={selectedRisk}
+            handleAnalyze={handleAnalyze}
+            statistics={statistics}
+          />
+        )}
+
+        {activeSection === "incidents" && (
+          <IncidentsView
+            incidents={incidents}
+            statistics={statistics}
+          />
+        )}
+
+        {activeSection === "controls" && (
+          <ControlsView
+            risks={risks}
+            selectedRisk={selectedRisk}
+            analysis={analysis}
+            handleAnalyze={handleAnalyze}
+            analysisLoading={analysisLoading}
+          />
+        )}
+
+        {activeSection === "iso27001" && (
+          <ISO27001View
+            risks={risks}
+            selectedRisk={selectedRisk}
+            setSelectedRisk={setSelectedRisk}
+            isoStatus={isoStatus}
+            isoControls={isoControls}
+            isoCompliance={isoCompliance}
+            isoSoA={isoSoA}
+            isoLoading={isoLoading}
+            isoSaving={isoSaving}
+            saveISOControl={saveISOControl}
+            riskISOControls={riskISOControls}
+            riskISOLoading={riskISOLoading}
+            riskISOSaving={riskISOSaving}
+            handleCreateRiskISOControl={handleCreateRiskISOControl}
+            handleDeleteRiskISOControl={handleDeleteRiskISOControl}
+          />
+        )}
+
+        {activeSection === "knowledge" && (
+          <KnowledgeView
+            semantic={semantic}
+            syncLoading={syncLoading}
+            handleSemanticSync={handleSemanticSync}
+          />
+        )}
+
+        {activeSection === "multiagent" && (
+          <MultiAgentView
+            risks={risks}
+            selectedRisk={selectedRisk}
+            setSelectedRisk={setSelectedRisk}
+            analysis={analysis}
+            handleAnalyze={handleAnalyze}
+            analysisLoading={analysisLoading}
+          />
+        )}
+
+        <footer className="footer">
+
+          <span>
+            RiskGuard v1.1.0
+          </span>
+
+          <span>
+            SQL · RDF · OWL · SPARQL · Reasoning · Multi-Agent
+          </span>
+
+        </footer>
+
+      </main>
+
+    </div>
+  );
+}
+
+export default App;

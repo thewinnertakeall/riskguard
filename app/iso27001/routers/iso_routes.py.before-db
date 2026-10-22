@@ -1,0 +1,41 @@
+from fastapi import APIRouter, HTTPException
+from app.iso27001.services.compliance import (
+    get_controls,
+    calculate_compliance
+)
+
+router = APIRouter(
+    prefix="/api/iso27001",
+    tags=["ISO 27001"]
+)
+
+
+@router.get("/status")
+def iso_status():
+    return {
+        "standard": "ISO/IEC 27001:2022",
+        "system": "RiskGuard",
+        "status": "operational",
+        "message": "RiskGuard ISO 27001 compliance module operational"
+    }
+
+
+@router.get("/controls")
+def iso_controls():
+    return get_controls()
+
+
+@router.get("/compliance")
+def iso_compliance():
+    return calculate_compliance()
+
+
+@router.get("/soa")
+def statement_of_applicability():
+    controls = get_controls()
+
+    return {
+        "standard": "ISO/IEC 27001:2022",
+        "document": "Statement of Applicability",
+        "controls": controls
+    }

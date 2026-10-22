@@ -1,0 +1,40 @@
+import { useState } from "react";
+
+import { analyzeRisk } from "../api";
+
+export function useRiskAnalysis({
+  selectedRisk,
+  setSelectedRisk,
+  setActiveSection,
+  setError
+}) {
+  const [analysis, setAnalysis] = useState(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  const handleAnalyze = async (risk) => {
+    try {
+      setSelectedRisk(risk);
+      setAnalysisLoading(true);
+      setError("");
+
+      const result = await analyzeRisk(risk.code);
+
+      setAnalysis(result);
+      setActiveSection("multiagent");
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+      setAnalysis(null);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
+  return {
+    selectedRisk,
+    setSelectedRisk,
+    analysis,
+    analysisLoading,
+    handleAnalyze
+  };
+}

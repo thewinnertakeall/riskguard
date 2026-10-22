@@ -1,0 +1,17 @@
+from abc import ABC, abstractmethod
+from typing import Any
+
+
+class SemanticRepository(ABC):
+
+    @abstractmethod
+    def find_risk(self, code: str) -> Any:
+        pass
+
+    @abstractmethod
+    def find_critical_risks(self) -> Any:
+        pass
+
+    @abstractmethod
+    def get_graph_status(self) -> dict:
+        pass

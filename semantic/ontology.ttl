@@ -1,312 +1,111 @@
 @prefix rg: <http://riskguard.org/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+# ============================================================
+# ONTOLOGY DECLARATION
+# ============================================================
+<http://riskguard.org/ontology> a owl:Ontology ;
+    rdfs:label "RiskGuard Occupational Risk Ontology" ;
+    rdfs:comment "Ontología OWL-DL para la gestión semántica de riesgos ocupacionales e ISO 31000" ;
+    owl:versionInfo "1.0.0" .
 
 # ============================================================
-# ONTOLOGY
+# CLASSES (TBox)
 # ============================================================
+rg:Risk a owl:Class ;
+    rdfs:label "Riesgo" ;
+    rdfs:comment "Un evento incierto que puede impactar los objetivos de la organización." .
 
-rg:RiskGuardOntology
-    a owl:Ontology ;
-    rdfs:label "RiskGuard Occupational Risk Management Ontology" ;
-    rdfs:comment "Ontology for representing occupational risks, causes, controls, incidents, processes, areas and locations." .
+rg:TechnologicalRisk a owl:Class ;
+    rdfs:subClassOf rg:Risk ;
+    rdfs:label "Riesgo Tecnológico" .
 
+rg:SocialRisk a owl:Class ;
+    rdfs:subClassOf rg:Risk ;
+    rdfs:label "Riesgo Social" .
 
-# ============================================================
-# CLASSES
-# ============================================================
+rg:NaturalRisk a owl:Class ;
+    rdfs:subClassOf rg:Risk ;
+    rdfs:label "Riesgo Natural" .
 
-rg:Risk
-    a owl:Class ;
-    rdfs:label "Risk" ;
-    rdfs:comment "Occupational risk identified within an organizational process." .
+# Inferred Classes
+rg:CriticalRisk a owl:Class ;
+    rdfs:subClassOf rg:Risk ;
+    rdfs:label "Riesgo Crítico" .
 
+rg:PriorityRisk a owl:Class ;
+    rdfs:subClassOf rg:CriticalRisk ;
+    rdfs:label "Riesgo Prioritario" .
 
-rg:Cause
-    a owl:Class ;
-    rdfs:label "Cause" ;
-    rdfs:comment "Cause associated with the occurrence of an occupational risk." .
+rg:Control a owl:Class ;
+    rdfs:label "Control" .
 
+rg:Incident a owl:Class ;
+    rdfs:label "Incidente" .
 
-rg:Control
-    a owl:Class ;
-    rdfs:label "Control" ;
-    rdfs:comment "Control measure implemented to reduce or manage a risk." .
+rg:Cause a owl:Class ;
+    rdfs:label "Causa" .
 
+rg:Process a owl:Class ;
+    rdfs:label "Proceso" .
 
-rg:Incident
-    a owl:Class ;
-    rdfs:label "Incident" ;
-    rdfs:comment "Occupational incident or accident associated with a risk." .
+rg:Area a owl:Class ;
+    rdfs:label "Área" .
 
-
-rg:Process
-    a owl:Class ;
-    rdfs:label "Process" ;
-    rdfs:comment "Organizational process in which risks may occur." .
-
-
-rg:Area
-    a owl:Class ;
-    rdfs:label "Area" ;
-    rdfs:comment "Organizational or operational area associated with a risk." .
-
-
-rg:Location
-    a owl:Class ;
-    rdfs:label "Location" ;
-    rdfs:comment "Physical location associated with risks or incidents." .
-
+rg:Location a owl:Class ;
+    rdfs:label "Ubicación" .
 
 # ============================================================
-# OBJECT PROPERTIES
+# OBJECT PROPERTIES (Relaciones)
 # ============================================================
-
-rg:hasCause
-    a owl:ObjectProperty ;
-    rdfs:label "has cause" ;
+rg:hasControl a owl:ObjectProperty ;
     rdfs:domain rg:Risk ;
-    rdfs:range rg:Cause .
+    rdfs:range rg:Control ;
+    rdfs:label "tiene control" .
 
-
-rg:hasControl
-    a owl:ObjectProperty ;
-    rdfs:label "has control" ;
+rg:hasIncident a owl:ObjectProperty ;
     rdfs:domain rg:Risk ;
-    rdfs:range rg:Control .
+    rdfs:range rg:Incident ;
+    rdfs:label "tiene incidente registrado" .
 
-
-rg:hasIncident
-    a owl:ObjectProperty ;
-    rdfs:label "has incident" ;
+rg:hasCause a owl:ObjectProperty ;
     rdfs:domain rg:Risk ;
-    rdfs:range rg:Incident .
+    rdfs:range rg:Cause ;
+    rdfs:label "es provocado por la causa" .
 
-
-rg:belongsToProcess
-    a owl:ObjectProperty ;
-    rdfs:label "belongs to process" ;
+rg:belongsToProcess a owl:ObjectProperty ;
     rdfs:domain rg:Risk ;
     rdfs:range rg:Process .
 
-
-rg:belongsToArea
-    a owl:ObjectProperty ;
-    rdfs:label "belongs to area" ;
+rg:belongsToArea a owl:ObjectProperty ;
     rdfs:domain rg:Risk ;
     rdfs:range rg:Area .
 
-
-rg:locatedIn
-    a owl:ObjectProperty ;
-    rdfs:label "located in" ;
-    rdfs:domain [
-        a owl:Class ;
-        owl:unionOf (
-            rg:Risk
-            rg:Incident
-        )
-    ] ;
+rg:locatedIn a owl:ObjectProperty ;
     rdfs:range rg:Location .
 
-
 # ============================================================
-# DATATYPE PROPERTIES - GENERAL
+# DATATYPE PROPERTIES (Atributos Tipados)
 # ============================================================
-
-rg:code
-    a owl:DatatypeProperty ;
-    rdfs:label "code" ;
-    rdfs:range xsd:string .
-
-
-rg:name
-    a owl:DatatypeProperty ;
-    rdfs:label "name" ;
-    rdfs:range xsd:string .
-
-
-rg:description
-    a owl:DatatypeProperty ;
-    rdfs:label "description" ;
-    rdfs:range xsd:string .
-
-
-rg:status
-    a owl:DatatypeProperty ;
-    rdfs:label "status" ;
-    rdfs:range xsd:string .
-
-
-# ============================================================
-# DATATYPE PROPERTIES - RISK
-# ============================================================
-
-rg:category
-    a owl:DatatypeProperty ;
-    rdfs:label "category" ;
-    rdfs:domain rg:Risk ;
-    rdfs:range xsd:string .
-
-
-rg:probability
-    a owl:DatatypeProperty ;
-    rdfs:label "probability" ;
+rg:riskScore a owl:DatatypeProperty ;
     rdfs:domain rg:Risk ;
     rdfs:range xsd:integer .
 
-
-rg:impact
-    a owl:DatatypeProperty ;
-    rdfs:label "impact" ;
+rg:probability a owl:DatatypeProperty ;
     rdfs:domain rg:Risk ;
     rdfs:range xsd:integer .
 
-
-rg:riskScore
-    a owl:DatatypeProperty ;
-    rdfs:label "risk score" ;
+rg:impact a owl:DatatypeProperty ;
     rdfs:domain rg:Risk ;
     rdfs:range xsd:integer .
 
+rg:severity a owl:DatatypeProperty ;
+    rdfs:domain rg:Incident ;
+    rdfs:range xsd:string .
 
-rg:riskLevel
-    a owl:DatatypeProperty ;
-    rdfs:label "risk level" ;
+rg:requiresPriorityAttention a owl:DatatypeProperty ;
     rdfs:domain rg:Risk ;
-    rdfs:range xsd:string .
-
-
-# ============================================================
-# DATATYPE PROPERTIES - CAUSE
-# ============================================================
-
-rg:causeType
-    a owl:DatatypeProperty ;
-    rdfs:label "cause type" ;
-    rdfs:domain rg:Cause ;
-    rdfs:range xsd:string .
-
-
-# ============================================================
-# DATATYPE PROPERTIES - CONTROL
-# ============================================================
-
-rg:controlType
-    a owl:DatatypeProperty ;
-    rdfs:label "control type" ;
-    rdfs:domain rg:Control ;
-    rdfs:range xsd:string .
-
-
-rg:hierarchyLevel
-    a owl:DatatypeProperty ;
-    rdfs:label "hierarchy level" ;
-    rdfs:domain rg:Control ;
-    rdfs:range xsd:string .
-
-
-rg:effectiveness
-    a owl:DatatypeProperty ;
-    rdfs:label "effectiveness" ;
-    rdfs:domain rg:Control ;
-    rdfs:range xsd:double .
-
-
-# ============================================================
-# DATATYPE PROPERTIES - INCIDENT
-# ============================================================
-
-rg:title
-    a owl:DatatypeProperty ;
-    rdfs:label "title" ;
-    rdfs:domain rg:Incident ;
-    rdfs:range xsd:string .
-
-
-rg:incidentDate
-    a owl:DatatypeProperty ;
-    rdfs:label "incident date" ;
-    rdfs:domain rg:Incident ;
-    rdfs:range xsd:date .
-
-
-rg:incidentType
-    a owl:DatatypeProperty ;
-    rdfs:label "incident type" ;
-    rdfs:domain rg:Incident ;
-    rdfs:range xsd:string .
-
-
-rg:severity
-    a owl:DatatypeProperty ;
-    rdfs:label "severity" ;
-    rdfs:domain rg:Incident ;
-    rdfs:range xsd:string .
-
-
-# ============================================================
-# PROPERTY CHARACTERISTICS
-# ============================================================
-
-rg:hasCause
-    rdfs:subPropertyOf rg:hasCause .
-
-rg:hasControl
-    rdfs:subPropertyOf rg:hasControl .
-
-rg:hasIncident
-    rdfs:subPropertyOf rg:hasIncident .
-
-rg:belongsToProcess
-    rdfs:subPropertyOf rg:belongsToProcess .
-
-rg:belongsToArea
-    rdfs:subPropertyOf rg:belongsToArea .
-
-rg:locatedIn
-    rdfs:subPropertyOf rg:locatedIn .
-
-
-# ============================================================
-# BASIC CLASS RESTRICTIONS
-# ============================================================
-
-rg:Risk
-    rdfs:subClassOf
-        [
-            a owl:Restriction ;
-            owl:onProperty rg:probability ;
-            owl:allValuesFrom xsd:integer
-        ] ,
-        [
-            a owl:Restriction ;
-            owl:onProperty rg:impact ;
-            owl:allValuesFrom xsd:integer
-        ] ,
-        [
-            a owl:Restriction ;
-            owl:onProperty rg:riskScore ;
-            owl:allValuesFrom xsd:integer
-        ] .
-
-
-rg:Control
-    rdfs:subClassOf
-        [
-            a owl:Restriction ;
-            owl:onProperty rg:effectiveness ;
-            owl:allValuesFrom xsd:double
-        ] .
-
-
-rg:Incident
-    rdfs:subClassOf
-        [
-            a owl:Restriction ;
-            owl:onProperty rg:incidentDate ;
-            owl:allValuesFrom xsd:date
-        ] .
+    rdfs:range xsd:boolean .

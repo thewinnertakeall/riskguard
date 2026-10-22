@@ -1,0 +1,38 @@
+@prefix rm: <http://recmind.org/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://recmind.org/ontology> a owl:Ontology ;
+    rdfs:label "RecMind Recommendation System Ontology" ;
+    rdfs:comment "Ontologia OWL-DL para el modelado semantico de usuarios, contenidos, calificaciones e inferencia de recomendaciones." ;
+    owl:versionInfo "1.0.0" .
+
+rm:User a owl:Class ; rdfs:label "Usuario" .
+rm:ActiveUser a owl:Class ; rdfs:subClassOf rm:User ; rdfs:label "Usuario Activo" .
+rm:Content a owl:Class ; rdfs:label "Contenido" .
+rm:Movie a owl:Class ; rdfs:subClassOf rm:Content ; rdfs:label "Pelicula" .
+rm:Book a owl:Class ; rdfs:subClassOf rm:Content ; rdfs:label "Libro" .
+rm:Article a owl:Class ; rdfs:subClassOf rm:Content ; rdfs:label "Articulo" .
+rm:Genre a owl:Class ; rdfs:label "Genero" .
+rm:Rating a owl:Class ; rdfs:label "Calificacion" .
+rm:Recommendation a owl:Class ; rdfs:label "Recomendacion" .
+rm:HighPriorityRecommendation a owl:Class ; rdfs:subClassOf rm:Recommendation ; rdfs:label "Recomendacion de Alta Prioridad" .
+
+rm:hasInterestInGenre a owl:ObjectProperty ; rdfs:domain rm:User ; rdfs:range rm:Genre .
+rm:hasGenre a owl:ObjectProperty ; rdfs:domain rm:Content ; rdfs:range rm:Genre .
+rm:hasRated a owl:ObjectProperty ; rdfs:domain rm:User ; rdfs:range rm:Rating .
+rm:ratingForContent a owl:ObjectProperty ; rdfs:domain rm:Rating ; rdfs:range rm:Content .
+rm:hasRecommendation a owl:ObjectProperty ; rdfs:domain rm:User ; rdfs:range rm:Recommendation .
+rm:recommendsContent a owl:ObjectProperty ; rdfs:domain rm:Recommendation ; rdfs:range rm:Content .
+
+rm:userId a owl:DatatypeProperty ; rdfs:domain rm:User ; rdfs:range xsd:string .
+rm:userName a owl:DatatypeProperty ; rdfs:domain rm:User ; rdfs:range xsd:string .
+rm:contentId a owl:DatatypeProperty ; rdfs:domain rm:Content ; rdfs:range xsd:string .
+rm:title a owl:DatatypeProperty ; rdfs:domain rm:Content ; rdfs:range xsd:string .
+rm:releaseYear a owl:DatatypeProperty ; rdfs:domain rm:Content ; rdfs:range xsd:integer .
+rm:ratingValue a owl:DatatypeProperty ; rdfs:domain rm:Rating ; rdfs:range xsd:float .
+rm:ratingTimestamp a owl:DatatypeProperty ; rdfs:domain rm:Rating ; rdfs:range xsd:dateTime .
+rm:matchScore a owl:DatatypeProperty ; rdfs:domain rm:Recommendation ; rdfs:range xsd:float .
+rm:recommendationReason a owl:DatatypeProperty ; rdfs:domain rm:Recommendation ; rdfs:range xsd:string .

@@ -1,0 +1,500 @@
+from sqlalchemy import (
+    Column,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    Table
+)
+
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from .database import Base
+
+
+# ============================================================
+# ASSOCIATION TABLES
+# ============================================================
+
+risk_causes = Table(
+    "risk_causes",
+    Base.metadata,
+    Column(
+        "risk_id",
+        Integer,
+        ForeignKey("risks.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "cause_id",
+        Integer,
+        ForeignKey("causes.id", ondelete="CASCADE"),
+        primary_key=True
+    )
+)
+
+
+risk_controls = Table(
+    "risk_controls",
+    Base.metadata,
+    Column(
+        "risk_id",
+        Integer,
+        ForeignKey("risks.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "control_id",
+        Integer,
+        ForeignKey("controls.id", ondelete="CASCADE"),
+        primary_key=True
+    )
+)
+
+
+risk_incidents = Table(
+    "risk_incidents",
+    Base.metadata,
+    Column(
+        "risk_id",
+        Integer,
+        ForeignKey("risks.id", ondelete="CASCADE"),
+        primary_key=True
+    ),
+    Column(
+        "incident_id",
+        Integer,
+        ForeignKey("incidents.id", ondelete="CASCADE"),
+        primary_key=True
+    )
+)
+
+
+class RiskISOControl(Base):
+    __tablename__ = "risk_iso_controls"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    risk_id = Column(
+        Integer,
+        ForeignKey("risks.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    iso_control_id = Column(
+        Integer,
+        ForeignKey("iso_controls.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    treatment_status = Column(
+        String(50),
+        default="Planned"
+    )
+
+    notes = Column(
+        Text
+    )
+
+    created_at = Column(
+        DateTime,
+        server_default=func.current_timestamp()
+    )
+
+
+    risk = relationship(
+        "Risk",
+        back_populates="iso_control_links"
+    )
+
+    iso_control = relationship(
+        "ISOControl",
+        back_populates="risk_links"
+    )
+
+
+# ============================================================
+# PROCESS
+# ============================================================
+
+class Process(Base):
+    __tablename__ = "processes"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    code = Column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    name = Column(
+        String(150),
+        nullable=False
+    )
+
+    description = Column(Text)
+
+    risks = relationship(
+        "Risk",
+        back_populates="process_object"
+    )
+
+
+# ============================================================
+# AREA
+# ============================================================
+
+class Area(Base):
+    __tablename__ = "areas"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    code = Column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    name = Column(
+        String(150),
+        nullable=False
+    )
+
+    description = Column(Text)
+
+    risks = relationship(
+        "Risk",
+        back_populates="area_object"
+    )
+
+
+# ============================================================
+# LOCATION
+# ============================================================
+
+class Location(Base):
+    __tablename__ = "locations"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    code = Column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    name = Column(
+        String(150),
+        nullable=False
+    )
+
+    description = Column(Text)
+
+    risks = relationship(
+        "Risk",
+        back_populates="location_object"
+    )
+
+    incidents = relationship(
+        "Incident",
+        back_populates="location"
+    )
+
+
+# ============================================================
+# RISK
+# ============================================================
+
+class Risk(Base):
+    __tablename__ = "risks"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    code = Column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    name = Column(
+        String(150),
+        nullable=False
+    )
+
+    description = Column(Text)
+
+    process_id = Column(
+        Integer,
+        ForeignKey("processes.id"),
+        nullable=True
+    )
+
+    area_id = Column(
+        Integer,
+        ForeignKey("areas.id"),
+        nullable=True
+    )
+
+    location_id = Column(
+        Integer,
+        ForeignKey("locations.id"),
+        nullable=True
+    )
+
+    category = Column(
+        String(100),
+        nullable=True
+    )
+
+    probability = Column(
+        Integer,
+        nullable=False,
+        default=1
+    )
+
+    impact = Column(
+        Integer,
+        nullable=False,
+        default=1
+    )
+
+    risk_score = Column(
+        Integer,
+        nullable=False,
+        default=1
+    )
+
+    risk_level = Column(
+        String(50),
+        nullable=False,
+        default="Low"
+    )
+
+    status = Column(
+        String(50),
+        nullable=False,
+        default="Active"
+    )
+
+    process_object = relationship(
+        "Process",
+        back_populates="risks"
+    )
+
+    area_object = relationship(
+        "Area",
+        back_populates="risks"
+    )
+
+    location_object = relationship(
+        "Location",
+        back_populates="risks"
+    )
+
+    causes = relationship(
+        "Cause",
+        secondary=risk_causes,
+        back_populates="risks"
+    )
+
+    controls = relationship(
+        "Control",
+        secondary=risk_controls,
+        back_populates="risks"
+    )
+
+    incidents = relationship(
+        "Incident",
+        secondary=risk_incidents,
+        back_populates="risks"
+    )
+
+
+    iso_control_links = relationship(
+        "RiskISOControl",
+        back_populates="risk",
+        cascade="all, delete-orphan"
+    )
+
+
+# ============================================================
+# CAUSE
+# ============================================================
+
+class Cause(Base):
+    __tablename__ = "causes"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    code = Column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    name = Column(
+        String(150),
+        nullable=False
+    )
+
+    description = Column(Text)
+
+    cause_type = Column(
+        String(100),
+        nullable=True
+    )
+
+    status = Column(
+        String(50),
+        nullable=False,
+        default="Active"
+    )
+
+    risks = relationship(
+        "Risk",
+        secondary=risk_causes,
+        back_populates="causes"
+    )
+
+
+# ============================================================
+# CONTROL
+# ============================================================
+
+class Control(Base):
+    __tablename__ = "controls"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    code = Column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    name = Column(
+        String(150),
+        nullable=False
+    )
+
+    description = Column(Text)
+
+    control_type = Column(
+        String(100),
+        nullable=True
+    )
+
+    hierarchy_level = Column(
+        String(100),
+        nullable=True
+    )
+
+    effectiveness = Column(
+        Float,
+        nullable=True
+    )
+
+    status = Column(
+        String(50),
+        nullable=False,
+        default="Active"
+    )
+
+    risks = relationship(
+        "Risk",
+        secondary=risk_controls,
+        back_populates="controls"
+    )
+
+
+# ============================================================
+# INCIDENT
+# ============================================================
+
+class Incident(Base):
+    __tablename__ = "incidents"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    code = Column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    title = Column(
+        String(200),
+        nullable=False
+    )
+
+    description = Column(Text)
+
+    incident_date = Column(
+        Date,
+        nullable=True
+    )
+
+    incident_type = Column(
+        String(100),
+        nullable=True
+    )
+
+    severity = Column(
+        String(50),
+        nullable=True
+    )
+
+    location_id = Column(
+        Integer,
+        ForeignKey("locations.id"),
+        nullable=True
+    )
+
+    status = Column(
+        String(50),
+        nullable=False,
+        default="Open"
+    )
+
+    location = relationship(
+        "Location",
+        back_populates="incidents"
+    )
+
+    risks = relationship(
+        "Risk",
+        secondary=risk_incidents,
+        back_populates="incidents"
+    )

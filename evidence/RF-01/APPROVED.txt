@@ -1,0 +1,81 @@
+============================================================
+RISKGUARD - RF-01
+GESTION DE RIESGOS
+ESTADO: APROBADO
+============================================================
+
+Fecha de validacion:
+2026-09-05
+
+FUNCIONALIDADES VERIFICADAS
+---------------------------
+
+[OK] Crear riesgo
+[OK] Listar riesgos
+[OK] Consultar riesgo por ID
+[OK] Actualizar riesgo
+[OK] Eliminar riesgo
+
+[OK] Validacion mediante Pydantic
+[OK] Calculo automatico de risk_score
+[OK] Clasificacion automatica del nivel de riesgo
+[OK] Persistencia en SQLite
+[OK] Frontend Risk Register
+[OK] Integracion frontend -> API -> SQLite
+
+VALORACION VERIFICADA
+---------------------
+
+Probability: 1..5
+Impact:      1..5
+Score:       probability * impact
+
+Low:       1..4
+Medium:    5..9
+High:     10..16
+Critical: 17..25
+
+DATOS SQLITE VERIFICADOS
+------------------------
+
+Total de riesgos: 6
+
+RISK-001            Score 20  Critical
+RISK-TEST-002       Score 8   Medium
+RISK-TEST-LOW       Score 2   Low
+RISK-TEST-MEDIUM    Score 8   Medium
+RISK-TEST-HIGH      Score 12  High
+RISK-TEST-CRITICAL  Score 20  Critical
+
+ARCHIVOS PRINCIPALES
+--------------------
+
+Backend:
+- app/main.py
+- app/crud.py
+- app/schemas.py
+- app/models_legacy.py
+
+Frontend:
+- frontend/src/api/risks.js
+- frontend/src/hooks/useRisks.js
+- frontend/src/views/RiskRegisterView.jsx
+- frontend/src/components/risk/RiskTable.jsx
+
+BASE DE DATOS
+-------------
+
+data/riskguard.db
+Tabla: risks
+
+CONCLUSION
+----------
+
+RF-01 cumple actualmente con la gestion CRUD de riesgos,
+validacion, valoracion y persistencia de datos.
+
+RF-01 APROBADO.
+
+============================================================
+FIN RF-01
+============================================================

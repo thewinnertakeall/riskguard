@@ -1,0 +1,28 @@
+from app.models_legacy import (
+    Process,
+    Area,
+    Location,
+    Risk,
+    Cause,
+    Control,
+    Incident,
+    risk_causes,
+    risk_controls,
+    risk_incidents,
+)
+
+from app.models.iso_control import ISOControl
+
+__all__ = [
+    "Process",
+    "Area",
+    "Location",
+    "Risk",
+    "Cause",
+    "Control",
+    "Incident",
+    "risk_causes",
+    "risk_controls",
+    "risk_incidents",
+    "ISOControl",
+]
